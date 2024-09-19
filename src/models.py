@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
 
-from training_data_wrapper import *
+import util
 
 
 class TermModule(nn.Module):
