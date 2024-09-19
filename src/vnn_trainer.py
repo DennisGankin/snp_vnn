@@ -10,7 +10,6 @@ from torch.optim.lr_scheduler import StepLR
 
 import util
 
-# rom training_data_wrapper import *
 from models import *
 
 import lightning as L
