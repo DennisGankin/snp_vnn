@@ -1,1 +1,5 @@
 data/
+# python specific
+*.pyc
+*.pyo
+__pycache__/
