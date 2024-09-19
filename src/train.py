@@ -5,11 +5,9 @@ import numpy as np
 import pandas as pd
 import lightning as L
 
-from drugcell_nn import DrugCellNN
-from vnn_trainer import VNNTrainer
 from training_data_wrapper import TrainingDataWrapperGeno, TrainingDataWrapperGenoUKB
 
-from vnn_trainer import VNNLightningModel, GenoVNNLightning
+from vnn_trainer import GenoVNNLightning
 
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers import TensorBoardLogger
