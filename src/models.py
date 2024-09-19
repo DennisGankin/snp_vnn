@@ -129,46 +129,44 @@ class LinearColumns(nn.Module):
 
 
 class GenoVNN(nn.Module):
-    def __init__(self, data_wrapper):
+    def __init__(self, args, graph):
         super().__init__()
 
-        self.root = data_wrapper.root
-        self.num_hiddens_genotype = data_wrapper.num_hiddens_genotype
+        self.root = graph.root
+        self.num_hiddens_genotype = args.num_hiddens_genotype
 
         # dictionary from terms to genes directly annotated with the term
-        self.term_direct_gene_map = data_wrapper.term_direct_gene_map
+        self.term_direct_gene_map = graph.term_direct_gene_map
 
         # Dropout Params
-        self.min_dropout_layer = data_wrapper.min_dropout_layer
-        self.dropout_fraction = data_wrapper.dropout_fraction
+        self.min_dropout_layer = args.min_dropout_layer
+        self.dropout_fraction = args.dropout_fraction
 
         # calculate the number of values in a state (term): term_size_map is the number of all genes annotated with the term
-        self.cal_term_dim(data_wrapper.term_size_map)
+        self.cal_term_dim(graph.term_size_map)
 
-        self.gene_id_mapping = data_wrapper.gene_id_mapping
+        self.gene_id_mapping = graph.gene_id_mapping
         # ngenes, gene_dim are the number of all genes
         self.gene_dim = len(self.gene_id_mapping)
 
         # No of input features per gene
-        self.feature_dim = data_wrapper.dataset.data.shape[
-            -1
-        ]  # len(data_wrapper.cell_features[0, 0, :])
+        self.feature_dim = args.feature_dim
 
         self.term_mask = util.create_term_mask(
-            self.term_direct_gene_map, self.gene_dim, data_wrapper.cuda
+            self.term_direct_gene_map, self.gene_dim, args.cuda
         )
         self.term_mask_matrix = util.create_mask_matrix(
-            self.term_direct_gene_map, self.gene_dim, data_wrapper.cuda
+            self.term_direct_gene_map, self.gene_dim, args.cuda
         )
 
         # add modules for neural networks to process genotypes
         self.create_gene_layer()
         # self.contruct_direct_gene_layer()
-        self.construct_NN_graph(copy.deepcopy(data_wrapper.dG))
+        self.construct_NN_graph(copy.deepcopy(graph.dG))
 
         # add module for final layer
         self.add_module(
-            "final_aux_linear_layer", nn.Linear(data_wrapper.num_hiddens_genotype, 1)
+            "final_aux_linear_layer", nn.Linear(args.num_hiddens_genotype, 1)
         )
         self.add_module("final_linear_layer_output", nn.Linear(1, 1))
 

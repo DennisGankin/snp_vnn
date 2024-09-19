@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import lightning as L
 
-from training_data_wrapper import TrainingDataWrapperGeno, TrainingDataWrapperGenoUKB
-
+from datasets import UKBGeneLevelDataset
 from vnn_trainer import GenoVNNLightning
+from graphs import GeneOntology
 
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers import TensorBoardLogger
@@ -51,9 +51,15 @@ def main():
         "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
     )(**argument_dict)
 
-    data_wrapper = TrainingDataWrapperGenoUKB(args)
+    ###### load dataset
+    dataset = UKBGeneLevelDataset(args)
+    args.feature_dim = dataset.data.shape[-1]
 
-    go_vnn_model = GenoVNNLightning(data_wrapper)
+    ##### crate gene ontology object
+    GeneOntology(dataset.gene_id_mapping, args.onto)
+
+    ##### load DL model
+    go_vnn_model = GenoVNNLightning(args)
     pytorch_total_params = sum(
         p.numel() for p in go_vnn_model.parameters() if p.requires_grad
     )
@@ -63,9 +69,7 @@ def main():
     torch.manual_seed(700)
 
     # random train validation split
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        data_wrapper.dataset, [0.8, 0.2]
-    )
+    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     # create dataloaders
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batchsize, shuffle=True, num_workers=31

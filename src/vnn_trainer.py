@@ -9,7 +9,8 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import StepLR
 
 import util
-from training_data_wrapper import *
+
+# rom training_data_wrapper import *
 from models import *
 
 import lightning as L
@@ -18,27 +19,27 @@ from torchmetrics import AUROC, ConfusionMatrix
 
 
 class GenoVNNLightning(L.LightningModule):
-    def __init__(self, data_wrapper):
+    def __init__(self, args, graph):
         super().__init__()
-        self.data_wrapper = data_wrapper
-        self.model = GenoVNN(self.data_wrapper)
-        # save hyper prams
+        self.args = args
+        self.model = GenoVNN(self.args, graph)
+        # save hyper params
         # self.save_hyperparameters()
 
         # compute class weights
-        self.num_positive_samples = torch.sum(
-            self.data_wrapper.dataset.labels == 1
-        ).float()
-        self.num_negative_samples = torch.sum(
-            self.data_wrapper.dataset.labels == 0
-        ).float()
+        # self.num_positive_samples = torch.sum(
+        #    self.data_wrapper.dataset.labels == 1
+        # ).float()
+        # self.num_negative_samples = torch.sum(
+        #    self.data_wrapper.dataset.labels == 0
+        # ).float()
         # self.total_samples = len(self.data_wrapper.dataset.labels)
         # assert self.total_samples == self.num_positive_samples + self.num_negative_samples
         # maybe add class weights to dataset?
 
         # self.pos_weight = self.total_samples / self.num_positive_samples
         # self.neg_weight = self.total_samples / self.num_negative_samples
-        self.pos_weight = self.num_negative_samples / self.num_positive_samples
+        # self.pos_weight = self.num_negative_samples / self.num_positive_samples
 
         # self.weights = torch.tensor([self.neg_weight, self.pos_weight])
 
@@ -59,11 +60,9 @@ class GenoVNNLightning(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.AdamW(
-            self.model.parameters(), lr=self.data_wrapper.lr
+            self.model.parameters(), lr=self.args.lr
         )  # , betas=(0.9, 0.99), eps=1e-05, weight_decay=self.data_wrapper.lr)
-        scheduler = StepLR(
-            optimizer, step_size=self.data_wrapper.lr_step_size, gamma=0.1
-        )
+        scheduler = StepLR(optimizer, step_size=self.args.lr_step_size, gamma=0.1)
         return {
             "optimizer": optimizer,
             "lr_scheduler": scheduler,
