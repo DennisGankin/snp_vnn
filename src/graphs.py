@@ -6,9 +6,10 @@ import networkx.algorithms.dag as nxadag
 
 
 class GeneOntology:
-    def __init__(self, gene_id_mapping, ontology_file):
+    def __init__(self, gene_id_mapping, ontology_file, child_node="gene"):
         self.gene_id_mapping = gene_id_mapping
         self.ontology_file = ontology_file
+        self.child_node = child_node
         self.dG = None
         self.root = None
         self.term_size_map = None
@@ -32,7 +33,7 @@ class GeneOntology:
         file_handle = open(file_name)
         for line in file_handle:
             line = line.rstrip().split()
-            if line[2] == "default":
+            if line[2] != self.child_node:
                 dG.add_edge(line[0], line[1])
             else:
                 if line[1] not in self.gene_id_mapping:

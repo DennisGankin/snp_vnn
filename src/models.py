@@ -6,8 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
 
-import util
-
+import src.util as util
 
 class TermModule(nn.Module):
     def __init__(self, input_size, hidden_size, dropout=0):
@@ -133,7 +132,7 @@ class GenoVNN(nn.Module):
         super().__init__()
 
         self.root = graph.root
-        self.num_hiddens_genotype = args.num_hiddens_genotype
+        self.num_hiddens_genotype = args.genotype_hiddens
 
         # dictionary from terms to genes directly annotated with the term
         self.term_direct_gene_map = graph.term_direct_gene_map
@@ -152,21 +151,24 @@ class GenoVNN(nn.Module):
         # No of input features per gene
         self.feature_dim = args.feature_dim
 
-        self.term_mask = util.create_term_mask(
-            self.term_direct_gene_map, self.gene_dim, args.cuda
-        )
+        print("computing masks")
+        #self.term_mask = util.create_term_mask(
+        #    self.term_direct_gene_map, self.gene_dim
+        #)
         self.term_mask_matrix = util.create_mask_matrix(
-            self.term_direct_gene_map, self.gene_dim, args.cuda
+            self.term_direct_gene_map, self.gene_dim
         )
 
         # add modules for neural networks to process genotypes
+        print("Constructing first NN layer")
         self.create_gene_layer()
         # self.contruct_direct_gene_layer()
+        print("Constructing NN graph")
         self.construct_NN_graph(copy.deepcopy(graph.dG))
 
         # add module for final layer
         self.add_module(
-            "final_aux_linear_layer", nn.Linear(args.num_hiddens_genotype, 1)
+            "final_aux_linear_layer", nn.Linear(self.num_hiddens_genotype, 1)
         )
         self.add_module("final_linear_layer_output", nn.Linear(1, 1))
 
