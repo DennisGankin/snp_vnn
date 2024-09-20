@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import util
 
 from sklearn.preprocessing import StandardScaler
+from pysnptools.snpreader import Bed
 
 
 # custom pytroch dataset
@@ -63,3 +64,36 @@ class UKBGeneLevelDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.data[idx], self.labels[idx]
+
+
+class UKBsnpLevelDataset(Dataset):
+    def __init__(self, args):
+        # load labels
+        self.label_col = args.label_col
+        self.label_df = pd.read_csv(args.train)
+        self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
+        self.bed_ids = torch.from_numpy(self.label_df["bed_id"].values).int()
+
+        # load input features from bed file
+        self.bed = Bed(args.mutations, count_A1=False)
+
+        # get snp ids in the bed file (TODO: rename)
+        self.snp_df = pd.read_csv(args.gene2id).reset_index()
+        self.snp_bed_ids = self.snp_df["snp_bed_id"]  # snp id in the bed file
+
+        self.gene_id_mapping = (
+            {  # mapping row in feature matrix to the corresponding snp
+                snp: idx for idx, snp in zip(self.snp_df.index, self.gene_df["snp"])
+            }
+        )
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        subset_bed = self.bed[self.bed_ids[idx], self.snp_bed_ids]
+        data = subset_bed.read().val
+        data = np.nan_to_num(data)
+        data = torch.from_numpy(np.dstack(data)).float()
+
+        return data, self.labels[idx]
