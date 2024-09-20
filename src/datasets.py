@@ -72,6 +72,7 @@ class UKBSnpLevelDataset(Dataset):
         self.label_df = pd.read_csv(args.train)
         self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
         self.bed_ids = self.label_df["bed_id"]
+        self.feature_dim = self.snp_df.snp.nunique()
 
         # load input features from bed file
         self.bed = Bed(args.mutations, count_A1=False)
