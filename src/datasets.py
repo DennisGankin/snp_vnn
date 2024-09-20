@@ -93,7 +93,7 @@ class UKBSnpLevelDataset(Dataset):
     def __getitem__(self, idx):
         subset_bed = self.bed[self.bed_ids[idx], self.snp_bed_ids]
         data = subset_bed.read().val
-        data = np.nan_to_num(data)
+        data = np.nan_to_num(data).T
         data = torch.from_numpy(data).float()
 
         return data, self.labels[idx]
