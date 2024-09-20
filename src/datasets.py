@@ -72,7 +72,6 @@ class UKBSnpLevelDataset(Dataset):
         self.label_df = pd.read_csv(args.train)
         self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
         self.bed_ids = self.label_df["bed_id"]
-        self.feature_dim = self.snp_df.snp.nunique()
 
         # load input features from bed file
         self.bed = Bed(args.mutations, count_A1=False)
@@ -80,6 +79,7 @@ class UKBSnpLevelDataset(Dataset):
         # get snp ids in the bed file (TODO: rename)
         self.snp_df = pd.read_csv(args.gene2id).reset_index()
         self.snp_bed_ids = self.snp_df["snp_bed_id"]  # snp id in the bed file
+        self.feature_dim = self.snp_df.snp.nunique()
 
         self.gene_id_mapping = (
             {  # mapping row in feature matrix to the corresponding snp
