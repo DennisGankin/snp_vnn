@@ -53,13 +53,13 @@ def main():
 
     ###### load dataset
     dataset = UKBGeneLevelDataset(args)
-    args.feature_dim = dataset.data.shape[-1]
+    args.feature_dim = dataset.data.shape[-1]  ### TODO
 
     ##### crate gene ontology object
-    GeneOntology(dataset.gene_id_mapping, args.onto)
+    graph = GeneOntology(dataset.gene_id_mapping, args.onto, child_node="snp")
 
     ##### load DL model
-    go_vnn_model = GenoVNNLightning(args)
+    go_vnn_model = GenoVNNLightning(args, graph)
     pytorch_total_params = sum(
         p.numel() for p in go_vnn_model.parameters() if p.requires_grad
     )

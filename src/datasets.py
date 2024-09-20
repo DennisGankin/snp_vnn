@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
-import util
 
 from sklearn.preprocessing import StandardScaler
 from pysnptools.snpreader import Bed
@@ -66,13 +65,13 @@ class UKBGeneLevelDataset(Dataset):
         return self.data[idx], self.labels[idx]
 
 
-class UKBsnpLevelDataset(Dataset):
+class UKBSnpLevelDataset(Dataset):
     def __init__(self, args):
         # load labels
         self.label_col = args.label_col
         self.label_df = pd.read_csv(args.train)
         self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
-        self.bed_ids = torch.from_numpy(self.label_df["bed_id"].values).int()
+        self.bed_ids = self.label_df["bed_id"]
 
         # load input features from bed file
         self.bed = Bed(args.mutations, count_A1=False)
@@ -83,7 +82,7 @@ class UKBsnpLevelDataset(Dataset):
 
         self.gene_id_mapping = (
             {  # mapping row in feature matrix to the corresponding snp
-                snp: idx for idx, snp in zip(self.snp_df.index, self.gene_df["snp"])
+                snp: idx for idx, snp in zip(self.snp_df.index, self.snp_df["snp"])
             }
         )
 
