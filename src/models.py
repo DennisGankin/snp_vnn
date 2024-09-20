@@ -8,6 +8,7 @@ import torch.nn.utils.prune as prune
 
 import src.util as util
 
+
 class TermModule(nn.Module):
     def __init__(self, input_size, hidden_size, dropout=0):
         super(TermModule, self).__init__()
@@ -101,7 +102,14 @@ class LinearColumns(nn.Module):
     def forward(self, x):
         # x is of shape (batch_size, ..., x1, x2)
         *batch_dims, x1, x2 = x.size()
-        assert x1 == self.x1 and x2 == self.x2, "Input dimension mismatch"
+        assert x1 == self.x1 and x2 == self.x2, (
+            "Input dimension mismatch. Input:"
+            + str(x.size())
+            + "Expected: "
+            + str(self.x1)
+            + " "
+            + str(self.x2)
+        )
 
         # Perform element-wise multiplication and then summation along the x2 dimension
         # weights is of shape (x1, x2, out_features)
@@ -152,9 +160,9 @@ class GenoVNN(nn.Module):
         self.feature_dim = args.feature_dim
 
         print("computing masks")
-        #self.term_mask = util.create_term_mask(
+        # self.term_mask = util.create_term_mask(
         #    self.term_direct_gene_map, self.gene_dim
-        #)
+        # )
         self.term_mask_matrix = util.create_mask_matrix(
             self.term_direct_gene_map, self.gene_dim
         )
