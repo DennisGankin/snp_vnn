@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import lightning as L
 
-from src.datasets import UKBSnpLevelDataset
-from src.vnn_trainer import GenoVNNLightning
-from src.graphs import GeneOntology
+from .datasets import UKBSnpLevelDataset
+from .vnn_trainer import GenoVNNLightning
+from .graphs import GeneOntology
 
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers import TensorBoardLogger

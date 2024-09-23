@@ -8,9 +8,9 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import StepLR
 
-import src.util as util
+import .util as util
 
-from src.models import *
+from .models import *
 
 import lightning as L
 from torchmetrics.classification import BinaryAccuracy

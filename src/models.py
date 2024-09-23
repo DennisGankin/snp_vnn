@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
 
-import src.util as util
+import .util as util
 
 
 class TermModule(nn.Module):
