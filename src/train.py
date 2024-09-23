@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import lightning as L
 
-from datasets import UKBGeneLevelDataset
-from vnn_trainer import GenoVNNLightning
-from graphs import GeneOntology
+from src.datasets import UKBSnpLevelDataset
+from src.vnn_trainer import GenoVNNLightning
+from src.graphs import GeneOntology
 
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers import TensorBoardLogger
@@ -22,22 +22,18 @@ from dataclasses import make_dataclass
 
 def main():
     argument_dict = {
-        "onto": "ontology.txt",
-        "train": "labels.csv",
+        "onto": "../ontology.txt",
+        "train": "../labels.csv",
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
-        "epoch": 150,
+        "epoch": 5,
         "lr": 0.001,
         "wd": 0.001,
         "alpha": 0.3,
-        "batchsize": 40480,  # 33840,
+        "batchsize": 32,  # 33840,
         "modeldir": "/model_test/",
         "cuda": 0,
-        "gene2id": "all_genes.csv",
-        "cell2id": "../../data/sample_train/sample2ind.txt",  # not used
+        "gene2id": "../ukb_snp_ids.csv",
         "genotype_hiddens": 4,
-        "mutations": "features.npy",  # all genes #"../../data/sample_train/bin_features.npz",
-        "cn_deletions": "cell2cndeletion.txt",  # not used
-        "cn_amplifications": "cell2cnamplification.txt",  # not used
         "optimize": 1,
         "zscore_method": "auc",
         "std": "/model_test/std.txt",
@@ -52,8 +48,8 @@ def main():
     )(**argument_dict)
 
     ###### load dataset
-    dataset = UKBGeneLevelDataset(args)
-    args.feature_dim = dataset.data.shape[-1]  ### TODO
+    dataset = UKBSnpLevelDataset(args)
+    args.feature_dim = dataset.feature_dim  ### TODO
 
     ##### crate gene ontology object
     graph = GeneOntology(dataset.gene_id_mapping, args.onto, child_node="snp")
