@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import StepLR
 
-import .util as util
+from . import util
 
 from .models import *
 
