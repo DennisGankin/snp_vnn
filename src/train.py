@@ -30,7 +30,7 @@ def main():
         "lr": 0.001,
         "wd": 0.001,
         "alpha": 0.3,
-        "batchsize": 32,  # 33840,
+        "batchsize": 350,  # 33840,
         "modeldir": "/model_test/",
         "cuda": 0,
         "gene2id": "../ukb_snp_ids.csv",
@@ -85,7 +85,7 @@ def main():
 
     # Initialize WandbLogger
     wandb_logger = WandbLogger(
-        project="vnn_ukb_breast_cancer", name="nest_reported_" + curr_time
+        project="vnn_ukb_breast_cancer", name="nest_snplevel_" + curr_time
     )
     logger = TensorBoardLogger(
         name="nest_ukb_model_" + curr_time, save_dir="/home/dnanexus/lightning_logs"
