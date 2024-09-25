@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import lightning as L
 
-from .datasets import UKBSnpLevelDataset
+from .datasets import UKBSnpLevelDatasetH5
 from .vnn_trainer import GenoVNNLightning
 from .graphs import GeneOntology
 
@@ -49,7 +49,7 @@ def main():
     )(**argument_dict)
 
     ###### load dataset
-    dataset = UKBSnpLevelDataset(args)
+    dataset = UKBSnpLevelDatasetH5(args)
     args.feature_dim = dataset.feature_dim  ### TODO
 
     ##### crate gene ontology object
