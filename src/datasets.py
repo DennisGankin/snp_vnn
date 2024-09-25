@@ -6,6 +6,8 @@ from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
 from pysnptools.snpreader import Bed
 
+import h5py
+
 
 # custom pytroch dataset
 class GenotypeDataset(Dataset):
@@ -65,7 +67,7 @@ class UKBGeneLevelDataset(Dataset):
         return self.data[idx], self.labels[idx]
 
 
-class UKBSnpLevelDataset(Dataset):
+class UKBSnpLevelDatasetBED(Dataset):
     def __init__(self, args):
         # load labels
         self.label_col = args.label_col
@@ -93,6 +95,44 @@ class UKBSnpLevelDataset(Dataset):
     def __getitem__(self, idx):
         subset_bed = self.bed[self.bed_ids[idx], self.snp_bed_ids]
         data = subset_bed.read().val
+        data = np.nan_to_num(data).T
+        data = torch.from_numpy(data).float()
+
+        return data, self.labels[idx]
+
+
+class UKBSnpLevelDatasetH5(Dataset):
+    """
+    Dataset for UKB SNP level data.
+    Using HPF5 file format.
+    """
+
+    def __init__(self, args):
+        # load labels
+        self.label_col = args.label_col
+        self.label_df = pd.read_csv(args.train)
+        self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
+
+        # load hdf5 file
+        self.hdf = h5py.File(args.mutations, "r")
+
+        # get snp ids in the hdf5 file (TODO: rename)
+        self.snp_df = pd.read_csv(args.gene2id).reset_index()
+        self.snp_bed_ids = self.snp_df["snp_bed_id"]  # snp id in the hdf5 file
+        self.feature_dim = 1  # input features per snp
+
+        self.gene_id_mapping = (
+            {  # mapping row in feature matrix to the corresponding snp
+                snp: idx for idx, snp in zip(self.snp_df.index, self.snp_df["snp"])
+            }
+        )
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        snp_id = self.snp_bed_ids[idx]
+        data = self.hdf[snp_id][:]
         data = np.nan_to_num(data).T
         data = torch.from_numpy(data).float()
 
