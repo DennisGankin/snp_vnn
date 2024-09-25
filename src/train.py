@@ -25,7 +25,7 @@ def main():
         "onto": "../ontology.txt",
         "train": "../labels.csv",
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
-        "mutations": "../merged_allchr.bed",
+        "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 5,
         "lr": 0.001,
         "wd": 0.001,
