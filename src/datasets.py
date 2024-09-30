@@ -118,7 +118,9 @@ class UKBSnpLevelDatasetH5(Dataset):
 
         # get snp ids in the hdf5 file (TODO: rename)
         self.snp_df = pd.read_csv(args.gene2id).reset_index()
-        self.snp_bed_ids = self.snp_df["snp_bed_id"]  # snp id in the hdf5 file
+        self.snp_bed_ids = self.snp_df["snp_bed_id"].astype(
+            str
+        )  # snp id in the hdf5 file
         self.feature_dim = 1  # input features per snp
 
         self.gene_id_mapping = (
