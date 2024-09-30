@@ -115,12 +115,12 @@ class UKBSnpLevelDatasetH5(Dataset):
 
         # load hdf5 file
         self.hdf = h5py.File(args.mutations, "r")
+        print("loading dataset")
+        self.hdf_data = self.hdf["genotype_data"]
 
         # get snp ids in the hdf5 file (TODO: rename)
         self.snp_df = pd.read_csv(args.gene2id).reset_index()
-        self.snp_bed_ids = self.snp_df["snp_bed_id"].astype(
-            str
-        )  # snp id in the hdf5 file
+        self.snp_bed_ids = self.snp_df["snp_bed_id"]  # snp id in the hdf5 file
         self.feature_dim = 1  # input features per snp
 
         self.gene_id_mapping = (
@@ -133,8 +133,8 @@ class UKBSnpLevelDatasetH5(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        snp_id = self.snp_bed_ids[idx]
-        data = self.hdf[snp_id][:]
+        # snp_id = self.snp_bed_ids[idx]
+        data = self.hdf_data[idx, self.snp_bed_ids]
         data = np.nan_to_num(data).T
         data = torch.from_numpy(data).float()
 
