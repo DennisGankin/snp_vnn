@@ -147,6 +147,8 @@ class UKBSnpLevelDatasetH5(Dataset):
 
         #  batch_size x num_snps
         data = np.dstack([data])  # batch_size x num_snps x 1
+        if len(data.shape) >= 3:
+            print("Long kong", str(data.shape))
         data = torch.from_numpy(data).float()
 
         return data, self.labels[idx]

@@ -73,9 +73,11 @@ class CompleteGeneModule(nn.Module):
         x = self.linear(x)
         x = torch.tanh(x)
         # permute for batchnorm
-        x = x.permute(0, 2, 1)  # (N, L, C) -> (N, C, L) , C being channels
+        # x = x.permute(0, 2, 1)  # (N, L, C) -> (N, C, L) , C being channels
+        x = x.transpose(2, 1)
         x = self.batchnorm(x)
-        x = x.permute(0, 2, 1)  # (N, C, L) -> (N ,L, C)
+        x = x.transpose(2, 1)
+        # x = x.permute(0, 2, 1)  # (N, C, L) -> (N ,L, C)
         return x
 
 
