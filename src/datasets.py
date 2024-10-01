@@ -134,9 +134,11 @@ class UKBSnpLevelDatasetH5(Dataset):
 
     def __getitem__(self, idx):
         # snp_id = self.snp_bed_ids[idx]
-        data = np.atleast_2d(self.hdf_data[idx, :])
-        data = np.nan_to_num(data[:, self.snp_bed_ids])
-        data = np.dstack([data])
+        print("id:", str(idx))
+        data = np.atleast_2d(self.hdf_data[idx, :])  # batch_size x num_snps
+        print("Shape:", str(data.shape))
+        data = np.nan_to_num(data[:, self.snp_bed_ids])  #  batch_size x num_snps
+        data = np.dstack([data])  # batch_size x num_snps x 1
         data = torch.from_numpy(data).float()
 
         return data, self.labels[idx]
