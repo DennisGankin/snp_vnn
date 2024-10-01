@@ -137,10 +137,13 @@ class UKBSnpLevelDatasetH5(Dataset):
         # print("id:", str(idx))
         data = self.hdf_data[idx, :]  # batch_size x num_snps
         # print("Shape:", str(data.shape))
-        if len(data.shape) == 1:
-            data = np.nan_to_num(data[self.snp_bed_ids])
-        else:
-            data = np.nan_to_num(data[:, self.snp_bed_ids])
+
+        # if len(data.shape) == 1:
+        #    data = np.nan_to_num(data[self.snp_bed_ids])
+        # else:
+        #    data = np.nan_to_num(data[:, self.snp_bed_ids])
+
+        data = np.nan_to_num(data.T[self.snp_bed_ids].T)
 
         #  batch_size x num_snps
         data = np.dstack([data])  # batch_size x num_snps x 1
