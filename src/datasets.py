@@ -134,7 +134,7 @@ class UKBSnpLevelDatasetH5(Dataset):
 
     def __getitem__(self, idx):
         # snp_id = self.snp_bed_ids[idx]
-        data = self.hdf_data[idx]  # , self.snp_bed_ids]
+        data = self.hdf_data[idx, self.snp_bed_ids]
         data = np.nan_to_num(data).T
         data = torch.from_numpy(data).float()
 
