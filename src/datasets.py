@@ -145,10 +145,12 @@ class UKBSnpLevelDatasetH5(Dataset):
 
         data = np.nan_to_num(data.T[self.snp_bed_ids].T)
 
+        data = np.expand_dims(data, axis=-1)  # dstack, but nothing to stack
+
         #  batch_size x num_snps
-        data = np.dstack([data])  # batch_size x num_snps x 1
-        if len(data.shape) >= 3:
-            print("Long kong", str(data.shape))
+        # data = np.dstack([data])  # batch_size x num_snps x 1
+        # if len(data.shape) >= 3:
+        #    print("Long kong", str(data.shape))
         data = torch.from_numpy(data).float()
 
         return data, self.labels[idx]
