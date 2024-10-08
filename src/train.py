@@ -69,10 +69,18 @@ def main():
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     # create dataloaders
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batchsize, shuffle=True, num_workers=16
+        train_dataset,
+        batch_size=args.batchsize,
+        shuffle=True,
+        num_workers=16,
+        pin_memory=True,
     )
     val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=args.batchsize, shuffle=False, num_workers=16
+        val_dataset,
+        batch_size=args.batchsize,
+        shuffle=False,
+        num_workers=16,
+        pin_memory=True,
     )
 
     print("Data is ready.")
