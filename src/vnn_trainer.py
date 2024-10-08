@@ -47,7 +47,7 @@ class GenoVNNLightning(L.LightningModule):
 
         # self.loss = CCCLoss()
         # loss as BCE loss
-        self.loss = nn.BCELoss()
+        self.loss = nn.BCEWithLogitsLoss()
         # self.loss = nn.BCEWithLogitsLoss(pos_weight=self.weights)
         # accuracy metric
         self.acc = BinaryAccuracy()
@@ -75,9 +75,9 @@ class GenoVNNLightning(L.LightningModule):
         # features = util.build_input_vector(inputdata, self.data_wrapper.input_features) # TODO: is this even needed?
         aux_out_map, _ = self.model(inputs)
         output = aux_out_map["final"].squeeze(1)
-        # output_logits = aux_out_map['final_logits'].squeeze(1)
+        output_logits = aux_out_map["final_logits"].squeeze(1)
         # loss = self.loss(output_logits, targets, pos_weight=self.pos_weight)
-        loss = self.loss(output, targets)
+        loss = self.loss(output_logits, targets)
         # log loss and accuracy
         self.log(
             "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
@@ -94,9 +94,9 @@ class GenoVNNLightning(L.LightningModule):
         inputs, targets = batch
         aux_out_map, _ = self.model(inputs)
         output = aux_out_map["final"].squeeze(1)
-        # output_logits = aux_out_map['final_logits'].squeeze(1)
+        output_logits = aux_out_map["final_logits"].squeeze(1)
         # loss = self.loss(output_logits, targets, pos_weight=self.pos_weight)
-        loss = self.loss(output, targets)
+        loss = self.loss(output_logits, targets)
         # log loss and accuracy
         self.log(
             "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
