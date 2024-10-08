@@ -65,6 +65,9 @@ def main():
     # for reproducibility, set seed
     torch.manual_seed(700)
 
+    # for speed
+    torch.set_float32_matmul_precision("medium")
+
     # random train validation split
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     # create dataloaders
@@ -103,6 +106,7 @@ def main():
         max_epochs=args.epoch,
         logger=[logger, wandb_logger],
         log_every_n_steps=2,
+        precision=16,
         callbacks=[lr_monitor],
     )  # log every steps should depend on the batch size
     # trainer = L.Trainer(max_epochs=args.epoch, logger=[logger, wandb_logger], profiler="simple") # log every steps should depend on the batch size
