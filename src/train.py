@@ -27,7 +27,7 @@ def main():
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 5,
-        "lr": 0.001,
+        "lr": 0.01,
         "wd": 0.001,
         "alpha": 0.3,
         "batchsize": 1480,  # 33840,
@@ -79,6 +79,7 @@ def main():
         shuffle=True,
         num_workers=16,
         pin_memory=True,
+        persistent_workers=True,
     )
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
@@ -86,6 +87,7 @@ def main():
         shuffle=False,
         num_workers=16,
         pin_memory=True,
+        persistent_workers=True,
     )
 
     print("Data is ready.")
