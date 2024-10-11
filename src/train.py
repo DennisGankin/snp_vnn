@@ -73,14 +73,14 @@ def main():
 
     # random train validation split
     _, train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [0.9, 0.08, 0.02]
+        dataset, [0.95, 0.04, 0.005]
     )
     # create dataloaders
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=args.batchsize,
         shuffle=True,
-        num_workers=16,
+        num_workers=8,
         pin_memory=True,
         persistent_workers=True,
     )
@@ -88,7 +88,7 @@ def main():
         val_dataset,
         batch_size=args.batchsize,
         shuffle=False,
-        num_workers=16,
+        num_workers=4,
         pin_memory=True,
         persistent_workers=True,
     )
@@ -110,9 +110,11 @@ def main():
     )
     # trainer = L.Trainer(max_epochs=args.epoch, logger=logger)
     trainer = L.Trainer(
-        max_epochs=args.epoch,
+        profiler="simple",
+        max_steps=4,  # max_epochs=args.epoch,
         logger=[logger, wandb_logger],
-        log_every_n_steps=2,
+        val_check_interval=0.25,
+        log_every_n_steps=1,
         precision=16,
         callbacks=[lr_monitor],
     )  # log every steps should depend on the batch size
