@@ -73,7 +73,7 @@ def main():
 
     # random train validation split
     _, train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [0.95, 0.04, 0.005]
+        dataset, [0.95, 0.045, 0.005]
     )
     # create dataloaders
     train_loader = torch.utils.data.DataLoader(
