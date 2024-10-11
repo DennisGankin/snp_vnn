@@ -63,7 +63,7 @@ def main():
     print("Number of parameters: ", pytorch_total_params)
 
     # Compile the model
-    go_vnn_model = torch.compile(go_vnn_model)
+    # go_vnn_model = torch.compile(go_vnn_model) # triton error
 
     # for reproducibility, set seed
     torch.manual_seed(700)
