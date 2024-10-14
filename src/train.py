@@ -27,7 +27,7 @@ def main():
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 5,
-        "lr": 0.01,
+        "lr": 0.003,
         "wd": 0.001,
         "alpha": 0.3,
         "batchsize": 1480,  # 33840,
