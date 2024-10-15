@@ -272,7 +272,7 @@ class GenoVNN(nn.Module):
             dG.remove_nodes_from(leaves)
 
         # Refactored forward method
-    def forward_refactored(self, x):
+    def forward(self, x):
         term_gene_out_map = {}
         hidden_embeddings_map = {}
         aux_out_map = {}
@@ -322,7 +322,7 @@ class GenoVNN(nn.Module):
         return aux_out_map, hidden_embeddings_map
 
     # definition of forward function
-    def forward(self, x):
+    def forward_old(self, x):
 
         hidden_embeddings_map = {}
         aux_out_map = {}
