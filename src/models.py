@@ -302,8 +302,12 @@ class GenoVNN(nn.Module):
                 if term in self.term_direct_gene_map:
                     child_input_list.append(term_gene_out_map[term])
 
-                # Perform concatenation once outside the loop for efficiency
-                child_input = torch.cat(child_input_list, dim=1)
+                # If no children, just use the gene input
+                if len(child_input_list) == 1:
+                    child_input = child_input_list[0]
+                else:
+                    # Use torch.cat only if multiple inputs need to be concatenated
+                    child_input = torch.cat(child_input_list, dim=1)
 
                 # Forward pass through the module for the current term
                 x, hidden = self._modules[term](child_input)
