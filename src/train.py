@@ -30,7 +30,7 @@ def main():
         "lr": 0.003,
         "wd": 0.001,
         "alpha": 0.3,
-        "batchsize": 1480,  # 33840,
+        "batchsize": 148,  # 33840,
         "modeldir": "/model_test/",
         "cuda": 0,
         "gene2id": "../ukb_snp_ids.csv",
@@ -111,10 +111,10 @@ def main():
     # trainer = L.Trainer(max_epochs=args.epoch, logger=logger)
     trainer = L.Trainer(
         profiler="simple",
-        max_steps=4,  # max_epochs=args.epoch,
+        max_steps=40,  # max_epochs=args.epoch,
         logger=[logger, wandb_logger],
         val_check_interval=0.25,
-        log_every_n_steps=1,
+        log_every_n_steps=10,
         precision=16,
         callbacks=[lr_monitor],
     )  # log every steps should depend on the batch size
