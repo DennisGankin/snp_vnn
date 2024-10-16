@@ -271,7 +271,7 @@ class GenoVNN(nn.Module):
             i += 1
             dG.remove_nodes_from(leaves)
 
-        # Refactored forward method
+    # Refactored forward method
     def forward(self, x):
         term_gene_out_map = {}
         hidden_embeddings_map = {}
@@ -295,8 +295,7 @@ class GenoVNN(nn.Module):
 
                 # Instead of iterating, try a vectorized approach if possible
                 if len(self.term_neighbor_map[term]) > 0:
-                    child_inputs = [hidden_embeddings_map[child] for child in self.term_neighbor_map[term]]
-                    child_input_list.extend(child_inputs)
+                    child_input_list = [hidden_embeddings_map[child] for child in self.term_neighbor_map[term]]
 
                 # If direct gene map exists for this term, append its result
                 if term in self.term_direct_gene_map:
@@ -370,6 +369,66 @@ class GenoVNN(nn.Module):
         # aux_layer_out = torch.tanh(self._modules['final_aux_linear_layer'](final_input))
         # aux_out_map['final'] = self._modules['final_linear_layer_output'](aux_layer_out) # this is just a 1 to one with a weight
         # for classification
+        aux_out_map["final_logits"] = self._modules["final_aux_linear_layer"](
+            final_input
+        )
+        aux_out_map["final"] = torch.sigmoid(aux_out_map["final_logits"])
+
+        return aux_out_map, hidden_embeddings_map
+
+            # Refactored forward method
+    def forward_refactored(self, x):
+        term_gene_out_map = {}
+        hidden_embeddings_map = {}
+        aux_out_map = {}
+
+        gene_input = self._modules["gene_layer"](x).squeeze(-1)
+
+        # very sparse though - not entirely correct to multiply!
+        #term_gene_out_matrix = torch.matmul(gene_input, self.term_mask_matrix.T)
+
+        for i, term in enumerate(self.term_direct_gene_map.keys()):
+            term_gene_out_map[term] = gene_input[:, self.term_masks[i]]
+
+        # Iterate over layers (try to reduce this for loop or parallelize)
+        for layer in self.term_layer_list:
+
+            child_input_list=[]
+            term_list=[]
+            # Iterate over terms in the layer
+            for term in layer:
+
+                # Use a list to accumulate child inputs in one operation
+                child_inputs= []
+
+                # Instead of iterating, try a vectorized approach if possible
+                if len(self.term_neighbor_map[term]) > 0:
+                    child_inputs = [hidden_embeddings_map[child] for child in self.term_neighbor_map[term]]
+
+                # If direct gene map exists for this term, append its result
+                if term in self.term_direct_gene_map:
+                    child_inputs.append(term_gene_out_map[term])
+
+                # If no children, just use the gene input
+                if len(child_inputs) == 1:
+                    child_input = child_inputs[0]
+                else:
+                    # Use torch.cat only if multiple inputs need to be concatenated
+                    child_input = torch.cat(child_inputs, dim=1)
+
+                child_input_list.append(child_input)
+                term_list.append(term)
+
+            batched_output, batched_hidden = zip(*[
+                    self._modules[term](child_input_list[i])
+                    for i, term in enumerate(term_list)
+                ])
+
+            # Store outputs for each term
+            for i, term in enumerate(term_list):
+                aux_out_map[term], hidden_embeddings_map[term] = batched_output[i], batched_hidden[i]
+
+        final_input = hidden_embeddings_map[self.root]
         aux_out_map["final_logits"] = self._modules["final_aux_linear_layer"](
             final_input
         )
