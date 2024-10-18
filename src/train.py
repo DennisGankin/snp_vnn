@@ -6,7 +6,7 @@ import pandas as pd
 import lightning as L
 
 from .datasets import UKBSnpLevelDatasetH5
-from .vnn_trainer import GenoVNNLightning
+from .vnn_trainer import GenoVNNLightning, FastVNNLightning
 from .graphs import GeneOntology
 
 from lightning.pytorch.loggers import WandbLogger
@@ -30,7 +30,7 @@ def main():
         "lr": 0.003,
         "wd": 0.001,
         "alpha": 0.3,
-        "batchsize": 148,  # 33840,
+        "batchsize": 1480,  # 33840,
         "modeldir": "/model_test/",
         "cuda": 0,
         "gene2id": "../ukb_snp_ids.csv",
@@ -56,7 +56,7 @@ def main():
     graph = GeneOntology(dataset.gene_id_mapping, args.onto, child_node="snp")
 
     ##### load DL model
-    go_vnn_model = GenoVNNLightning(args, graph)
+    go_vnn_model = FastVNNLightning(args, graph)  # GenoVNNLightning(args, graph)
     pytorch_total_params = sum(
         p.numel() for p in go_vnn_model.parameters() if p.requires_grad
     )
