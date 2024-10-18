@@ -40,13 +40,17 @@ def main():
         "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
     )(**argument_dict)
 
-    print("Setting up dataset")
-    dataset = UKBSnpLevelDatasetH5(args)
-    args.feature_dim = dataset.feature_dim
+    print("Setting up data")
+    snp_df = pd.read_csv(args.gene2id).reset_index()
+    feature_dim = 1  # input features per snp
+
+    gene_id_mapping = {  # mapping row in feature matrix to the corresponding snp
+        snp: idx for idx, snp in zip(snp_df.index, snp_df["snp"])
+    }
 
     print("Setting up gene ontology")
     ##### crate gene ontology object
-    graph = GeneOntology(dataset.gene_id_mapping, args.onto, child_node="snp")
+    graph = GeneOntology(gene_id_mapping, args.onto, child_node="snp")
 
     print("Setting up DL model")
     ##### load DL model
