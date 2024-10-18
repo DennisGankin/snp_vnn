@@ -12,6 +12,45 @@ from .graphs import GeneOntology
 from dataclasses import make_dataclass
 
 
+def timing_batches(model, gpu=False, n_repeats=5, batch_sizes=[8, 64, 256, 512]):
+    for batch_size in batch_sizes:  # 1024, 2048, 4096]:
+        print(f"Trying batch size: {batch_size}")
+
+        total_time = 0.0
+
+        for _ in range(n_repeats):
+            # Allocate tensor and move it to the GPU
+            x = torch.randn(batch_size, 429371, 1)
+            if gpu:
+                x = x.to("cuda")
+
+            # Start the timer
+            start_time = time.time()
+
+            # Run your model
+            model(x)
+
+            # Stop the timer
+            end_time = time.time()
+
+            # Calculate the elapsed time (in seconds) and accumulate
+            elapsed_time = end_time - start_time
+            total_time += elapsed_time
+
+        # Compute average time per batch size
+        avg_time_per_batch = total_time / n_repeats
+
+        # Compute time per sample
+        time_per_sample = avg_time_per_batch / batch_size
+
+        print(
+            f"Average time for batch size {batch_size}: {avg_time_per_batch:.4f} seconds"
+        )
+        print(
+            f"Time per sample for batch size {batch_size}: {time_per_sample:.6f} seconds\n"
+        )
+
+
 def main():
     argument_dict = {
         "onto": "../ontology.txt",
@@ -78,42 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-def timing_batches(model, gpu=False, n_repeats=5, batch_sizes=[8, 64, 256, 512]):
-    for batch_size in batch_sizes:  # 1024, 2048, 4096]:
-        print(f"Trying batch size: {batch_size}")
-
-        total_time = 0.0
-
-        for _ in range(n_repeats):
-            # Allocate tensor and move it to the GPU
-            x = torch.randn(batch_size, 429371, 1)
-            if gpu:
-                x = x.to("cuda")
-
-            # Start the timer
-            start_time = time.time()
-
-            # Run your model
-            model(x)
-
-            # Stop the timer
-            end_time = time.time()
-
-            # Calculate the elapsed time (in seconds) and accumulate
-            elapsed_time = end_time - start_time
-            total_time += elapsed_time
-
-        # Compute average time per batch size
-        avg_time_per_batch = total_time / n_repeats
-
-        # Compute time per sample
-        time_per_sample = avg_time_per_batch / batch_size
-
-        print(
-            f"Average time for batch size {batch_size}: {avg_time_per_batch:.4f} seconds"
-        )
-        print(
-            f"Time per sample for batch size {batch_size}: {time_per_sample:.6f} seconds\n"
-        )
