@@ -27,7 +27,7 @@ def main():
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 5,
-        "lr": 0.003,
+        "lr": 0.001,
         "wd": 0.001,
         "alpha": 0.3,
         "batchsize": 264,  # 33840,
@@ -72,8 +72,8 @@ def main():
     torch.set_float32_matmul_precision("medium")
 
     # random train validation split
-    _, train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [0.95, 0.045, 0.005]
+    train_dataset, val_dataset, _ = torch.utils.data.random_split(
+        dataset, [0.7, 0.15, 0.15]
     )
     # create dataloaders
     train_loader = torch.utils.data.DataLoader(
@@ -111,10 +111,10 @@ def main():
     # trainer = L.Trainer(max_epochs=args.epoch, logger=logger)
     trainer = L.Trainer(
         profiler="simple",
-        max_steps=4,  # max_epochs=args.epoch,
+        max_epochs=args.epoch,  # max_steps=4,  #
         logger=[logger, wandb_logger],
         val_check_interval=0.25,
-        log_every_n_steps=1,
+        log_every_n_steps=10,
         precision=16,
         callbacks=[lr_monitor],
     )  # log every steps should depend on the batch size
