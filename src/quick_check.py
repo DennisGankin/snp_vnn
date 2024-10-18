@@ -42,7 +42,7 @@ def main():
 
     print("Setting up data")
     snp_df = pd.read_csv(args.gene2id).reset_index()
-    feature_dim = 1  # input features per snp
+    args.feature_dim = 1  # input features per snp
 
     gene_id_mapping = {  # mapping row in feature matrix to the corresponding snp
         snp: idx for idx, snp in zip(snp_df.index, snp_df["snp"])
