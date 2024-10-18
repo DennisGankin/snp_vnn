@@ -69,11 +69,14 @@ def main():
     # for speed
     torch.set_float32_matmul_precision("medium")
 
+    # model to device
+    go_vnn_model.to("cuda")
+
     # create a random tensor for testing
     # create tensors of inreasing batch size and test pass through model
     for batch_size in [8, 64, 256, 512, 1024, 2048, 4096]:
         print("Trying batch size: ", batch_size)
-        x = torch.randn(batch_size, 429371, 1)
+        x = torch.randn(batch_size, 429371, 1).to("cuda")
         go_vnn_model(x)
 
 
