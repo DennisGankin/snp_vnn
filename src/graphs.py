@@ -79,6 +79,12 @@ class GeneOntology:
         self.dG = dG
         self.root = roots[0]
         self.term_size_map = term_size_map
-        self.term_direct_gene_map = term_direct_gene_map
+
+        # some terms added that are not in the graph
+        # go through term gene map and check
+        self.term_direct_gene_map = {}
+        for term in term_direct_gene_map:
+            if term in dG.nodes():
+                self.term_direct_gene_map[term] = term_direct_gene_map[term]
 
         return dG

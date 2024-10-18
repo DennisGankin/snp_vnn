@@ -8,6 +8,8 @@ import torch.nn.utils.prune as prune
 
 from . import util
 
+import sparselinear as sl
+
 
 class TermModule(nn.Module):
     def __init__(self, input_size, hidden_size, dropout=0):
@@ -64,7 +66,7 @@ class GeneModule(nn.Module):
 class CompleteGeneModule(nn.Module):
     def __init__(self, num_genes, gene_feature_dim, gene_out_dim=1):
         super(CompleteGeneModule, self).__init__()
-        self.linear = LinearColumns(num_genes, gene_feature_dim, 1)
+        self.linear = LinearColumns(num_genes, gene_feature_dim, gene_out_dim)
         self.batchnorm = nn.BatchNorm1d(
             1
         )  # might normalizing across gene inputs be better?
@@ -169,15 +171,20 @@ class GenoVNN(nn.Module):
             self.term_direct_gene_map, self.gene_dim
         )
 
-        self.term_masks = [self.term_mask_matrix[i] == 1 for i in range(len(self.term_direct_gene_map.keys()))]
+        self.term_masks = [
+            self.term_mask_matrix[i] == 1
+            for i in range(len(self.term_direct_gene_map.keys()))
+        ]
 
-        self.term_gene_in_map = {} 
+        self.term_gene_in_map = {}
         # precompute inputs for each dimension
-        #for i, term in enumerate(self.term_direct_gene_map.keys()):
+        # for i, term in enumerate(self.term_direct_gene_map.keys()):
         #    term_gene_out_map[term] = self.term_mask_matrix[i] == 1
 
         # term to id
-        self.term_id_mapping = {term: i for i, term in enumerate(self.term_direct_gene_map.keys())}
+        self.term_id_mapping = {
+            term: i for i, term in enumerate(self.term_direct_gene_map.keys())
+        }
 
         # add modules for neural networks to process genotypes
         print("Constructing first NN layer")
@@ -208,22 +215,6 @@ class GenoVNN(nn.Module):
         # create complete gene module
         gene_layer = CompleteGeneModule(self.gene_dim, self.feature_dim)
         self.add_module("gene_layer", gene_layer)
-
-    # build a layer for forwarding gene that are directly annotated with the term
-    def contruct_direct_gene_layer(self):
-
-        # gene modules
-        for gene, _ in self.gene_id_mapping.items():
-            self.add_module(gene, GeneModule(self.feature_dim))
-
-        # the number of terms that have genes directly connected to them
-        terms_with_gene_input = len(self.term_direct_gene_map)
-        # create gene_layer
-        gene_layer = GeneLayer(
-            self.gene_dim, terms_with_gene_input, self.term_mask_matrix
-        )
-
-        self.add_module("gene_layer_", gene_layer)
 
     # start from bottom (leaves), and start building a neural network using the given ontology
     # adding modules --- the modules are not connected yet
@@ -280,7 +271,7 @@ class GenoVNN(nn.Module):
         gene_input = self._modules["gene_layer"](x).squeeze(-1)
 
         # very sparse though - not entirely correct to multiply!
-        #term_gene_out_matrix = torch.matmul(gene_input, self.term_mask_matrix.T)
+        # term_gene_out_matrix = torch.matmul(gene_input, self.term_mask_matrix.T)
 
         for i, term in enumerate(self.term_direct_gene_map.keys()):
             term_gene_out_map[term] = gene_input[:, self.term_masks[i]]
@@ -295,7 +286,10 @@ class GenoVNN(nn.Module):
 
                 # Instead of iterating, try a vectorized approach if possible
                 if len(self.term_neighbor_map[term]) > 0:
-                    child_input_list = [hidden_embeddings_map[child] for child in self.term_neighbor_map[term]]
+                    child_input_list = [
+                        hidden_embeddings_map[child]
+                        for child in self.term_neighbor_map[term]
+                    ]
 
                 # If direct gene map exists for this term, append its result
                 if term in self.term_direct_gene_map:
@@ -376,7 +370,8 @@ class GenoVNN(nn.Module):
 
         return aux_out_map, hidden_embeddings_map
 
-            # Refactored forward method
+        # Refactored forward method
+
     def forward_refactored(self, x):
         term_gene_out_map = {}
         hidden_embeddings_map = {}
@@ -385,7 +380,7 @@ class GenoVNN(nn.Module):
         gene_input = self._modules["gene_layer"](x).squeeze(-1)
 
         # very sparse though - not entirely correct to multiply!
-        #term_gene_out_matrix = torch.matmul(gene_input, self.term_mask_matrix.T)
+        # term_gene_out_matrix = torch.matmul(gene_input, self.term_mask_matrix.T)
 
         for i, term in enumerate(self.term_direct_gene_map.keys()):
             term_gene_out_map[term] = gene_input[:, self.term_masks[i]]
@@ -393,17 +388,20 @@ class GenoVNN(nn.Module):
         # Iterate over layers (try to reduce this for loop or parallelize)
         for layer in self.term_layer_list:
 
-            child_input_list=[]
-            term_list=[]
+            child_input_list = []
+            term_list = []
             # Iterate over terms in the layer
             for term in layer:
 
                 # Use a list to accumulate child inputs in one operation
-                child_inputs= []
+                child_inputs = []
 
                 # Instead of iterating, try a vectorized approach if possible
                 if len(self.term_neighbor_map[term]) > 0:
-                    child_inputs = [hidden_embeddings_map[child] for child in self.term_neighbor_map[term]]
+                    child_inputs = [
+                        hidden_embeddings_map[child]
+                        for child in self.term_neighbor_map[term]
+                    ]
 
                 # If direct gene map exists for this term, append its result
                 if term in self.term_direct_gene_map:
@@ -419,14 +417,19 @@ class GenoVNN(nn.Module):
                 child_input_list.append(child_input)
                 term_list.append(term)
 
-            batched_output, batched_hidden = zip(*[
+            batched_output, batched_hidden = zip(
+                *[
                     self._modules[term](child_input_list[i])
                     for i, term in enumerate(term_list)
-                ])
+                ]
+            )
 
             # Store outputs for each term
             for i, term in enumerate(term_list):
-                aux_out_map[term], hidden_embeddings_map[term] = batched_output[i], batched_hidden[i]
+                aux_out_map[term], hidden_embeddings_map[term] = (
+                    batched_output[i],
+                    batched_hidden[i],
+                )
 
         final_input = hidden_embeddings_map[self.root]
         aux_out_map["final_logits"] = self._modules["final_aux_linear_layer"](
@@ -435,3 +438,199 @@ class GenoVNN(nn.Module):
         aux_out_map["final"] = torch.sigmoid(aux_out_map["final_logits"])
 
         return aux_out_map, hidden_embeddings_map
+
+
+class GraphLayer(nn.Module):
+    def __init__(
+        self, input_size, output_size, hidden_size, in_ids, out_ids, dropout=0
+    ):
+        super(GraphLayer, self).__init__()
+
+        col = in_ids.repeat_interleave(hidden_size)
+        row = out_ids.repeat_interleave(hidden_size) * 4 + torch.tensor(
+            [0, 1, 2, 3]
+        ).repeat(len(out_ids))
+        connections = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
+        self.dropout = nn.Dropout(p=dropout)
+        self.linear1 = sl.SparseLinear(
+            input_size, output_size * hidden_size, connectivity=connections, bias=False
+        )
+        self.batchnorm = nn.BatchNorm1d(hidden_size)
+        self.linear2 = nn.Linear(hidden_size, 1)
+        self.hidden_size = hidden_size
+
+    def forward(self, x):
+        x = self.dropout(x)
+        x = self.linear1(x)
+        x = torch.tanh(x)
+        # reshape
+        x = x.view(x.shape[0], self.hidden_size, -1)
+        hidden = self.batchnorm(x)
+        hidden = hidden.transpose(2, 1)
+        x = self.linear2(hidden)
+        x = torch.tanh(x)
+
+        return x.squeeze(-1), hidden
+
+
+class FastVNN(nn.Module):
+    def __init__(self, args, graph):
+        super().__init__()
+
+        self.root = graph.root
+        self.num_hiddens_genotype = args.genotype_hiddens
+
+        # dictionary from terms to genes directly annotated with the term # mapping of input to genes
+        self.term_direct_gene_map = graph.term_direct_gene_map
+
+        # Dropout Params
+        self.min_dropout_layer = args.min_dropout_layer
+        self.dropout_fraction = args.dropout_fraction
+
+        # calculate the number of values in a state (term): term_size_map is the number of all genes annotated with the term
+        self.cal_term_dim(graph.term_size_map)
+
+        self.gene_id_mapping = (
+            graph.gene_id_mapping
+        )  ### TODO this is the mapping of input feature positions (SNP to gene), some inputs mnight be ignored!!
+        # ngenes, gene_dim are the number of all genes
+        self.gene_dim = len(self.gene_id_mapping)  # input dimension
+
+        # No of input features per gene
+        self.feature_dim = args.feature_dim
+
+        self.term_gene_in_map = {}
+
+        # node to i mapping
+        self.node_id_mapping = {node: i for i, node in enumerate(graph.dG.nodes())}
+
+        #  input dimension
+        self.input_dim = self.gene_dim  # num of input features (SNPs)
+        self.hidden_dimension = len(graph.dG.nodes())  # num of terms
+        # create hiddenstate
+        # self.hidden_state = torch.tensor(self.hidden_dimension, requires_grad=True)
+
+        # add modules for neural networks to process genotypes
+        print("Constructing first NN layer")
+        self.create_gene_layer()
+        in_col, in_row = util.input_connections(
+            self.term_direct_gene_map, self.node_id_mapping
+        )
+        # create first graph layer from input to leaves
+        self.add_module(
+            "graph_layer_0",
+            GraphLayer(
+                self.input_dim,
+                self.hidden_dimension,
+                self.num_hiddens_genotype,
+                in_col,
+                in_row,
+                self.dropout_fraction,
+            ),
+        )
+
+        # self.contruct_direct_gene_layer()
+        print("Constructing NN graph")
+        self.construct_NN_graph(copy.deepcopy(graph.dG))
+
+        # add module for final layer
+        self.add_module(
+            "final_aux_linear_layer", nn.Linear(self.num_hiddens_genotype, 1)
+        )
+        self.add_module("final_linear_layer_output", nn.Linear(1, 1))
+
+    # calculate the number of values in a state (term)
+    def cal_term_dim(self, term_size_map):
+
+        self.term_dim_map = {}
+
+        for term, term_size in term_size_map.items():
+            num_output = self.num_hiddens_genotype
+
+            # log the number of hidden variables per each term
+            num_output = int(num_output)
+            self.term_dim_map[term] = num_output
+
+    def create_gene_layer(self):
+        # create complete gene module
+        gene_layer = CompleteGeneModule(self.gene_dim, self.feature_dim)
+        self.add_module("gene_layer", gene_layer)
+
+    # start from bottom (leaves), and start building a neural network using the given ontology
+    # adding modules --- the modules are not connected yet
+    def construct_NN_graph(self, dG):
+
+        # store the network layers based on the graph's topology
+        self.graph_layer_list = []
+        # neighbor_map records all children of each node
+        self.neighbor_map = {node: list(dG.neighbors(node)) for node in dG.nodes()}
+
+        # computing layers that can be computed independently
+        i = 0
+        while True:
+            leaves = [
+                n for n in dG.nodes() if dG.out_degree(n) == 0
+            ]  # get the leaves/nodes of the next layer
+
+            if len(leaves) == 0:
+                break
+
+            self.graph_layer_list.append(leaves)  # add list of nodes of this layer
+
+            i += 1
+            dG.remove_nodes_from(leaves)
+
+        # iterate over the layers but skip first because that only gets input
+        for i, layer in enumerate(self.graph_layer_list):
+            if i == 0:
+                # assert that each term is in term_direct_gene_map
+                for term in layer:
+                    assert term in self.term_direct_gene_map
+            else:
+                # create list of children and list of parents
+                col = []  # parents
+                row = []  # children
+                for node in layer:
+                    # get a list of children
+                    for child in self.neighbor_map[node]:
+                        row.append(self.node_id_mapping[child])
+                        col.append(self.node_id_mapping[node])
+                col = torch.tensor(col, dtype=torch.long)
+                row = torch.tensor(row, dtype=torch.long)
+
+                self.add_module(
+                    "graph_layer_" + str(i + 1),
+                    GraphLayer(
+                        self.hidden_dimension,
+                        self.hidden_dimension,
+                        self.num_hiddens_genotype,
+                        col,
+                        row,
+                        self.dropout_fraction,
+                    ),
+                )
+
+    def forward(self, x):
+        aux_out_map = {}
+
+        gene_input = self._modules["gene_layer"](x).squeeze(-1)
+
+        # loop through layers
+        for i, layer in enumerate(self.graph_layer_list):
+            if i == 0:
+                # get the output of the first layer
+                x, hidden = self._modules["graph_layer_0"](gene_input)
+            else:
+                # get the output of the other layers
+                x, hidden = self._modules["graph_layer_" + str(i + 1)](x)
+
+        final_input = hidden[:,self.node_id_mapping[self.root]]
+        # aux_layer_out = torch.tanh(self._modules['final_aux_linear_layer'](final_input))
+        # aux_out_map['final'] = self._modules['final_linear_layer_output'](aux_layer_out) # this is just a 1 to one with a weight
+        # for classification
+        aux_out_map["final_logits"] = self._modules["final_aux_linear_layer"](
+            final_input
+        )
+        aux_out_map["final"] = torch.sigmoid(aux_out_map["final_logits"])
+
+        return aux_out_map, x

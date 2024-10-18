@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 
-#import wandb
+# import wandb
 
 
 def pearson_corr(x, y):
@@ -258,6 +258,17 @@ def create_mask_matrix(term_direct_gene_map, gene_dim):
         for gene_id in gene_set:
             mask[i, gene_id] = 1
     return mask
+
+
+def input_connections(feature_to_node_map, node_id_mapping):
+    # connect the input feature positions to the node positions in the hidden state
+    col = []
+    row = []
+    for node in feature_to_node_map:  # each systems getting direct input from genes
+        for inp_pos in feature_to_node_map[node]:
+            col.append(inp_pos)  # from input
+            row.append(node_id_mapping[node])  # to node
+    return torch.tensor(col, dtype=torch.long), torch.tensor(row, dtype=torch.long)
 
 
 def get_grad_norm(model_params, norm_type):
