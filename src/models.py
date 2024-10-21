@@ -453,7 +453,7 @@ class GraphLayer(nn.Module):
         connections = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
         self.dropout = nn.Dropout(p=dropout)
         self.linear1 = sl.SparseLinear(
-            input_size, output_size * hidden_size, connectivity=connections, bias=False
+            input_size, output_size * hidden_size, connectivity=connections,# bias=False
         )
         self.batchnorm = nn.BatchNorm1d(hidden_size)
         self.linear2 = nn.Linear(hidden_size, 1)
