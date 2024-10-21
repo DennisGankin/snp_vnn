@@ -447,7 +447,7 @@ class GraphLayer(nn.Module):
         super(GraphLayer, self).__init__()
 
         col = in_ids.repeat_interleave(hidden_size)
-        row = out_ids.repeat_interleave(hidden_size) * 4 + torch.tensor(
+        row = out_ids.repeat_interleave(hidden_size) * hidden_size + torch.tensor(
             [0, 1, 2, 3]
         ).repeat(len(out_ids))
         connections = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
@@ -456,7 +456,7 @@ class GraphLayer(nn.Module):
             input_size, output_size * hidden_size, connectivity=connections,# bias=False
         )
         self.batchnorm = nn.BatchNorm1d(hidden_size)
-        self.linear2 = nn.Linear(hidden_size, 1)
+        self.linear2 = LinearColumns(output_size, hidden_size, 1)
         self.hidden_size = hidden_size
 
     def forward(self, x):
