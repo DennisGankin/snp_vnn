@@ -109,11 +109,9 @@ def main():
         name="nest_ukb_model_" + curr_time, save_dir="/home/dnanexus/lightning_logs"
     )
     # trainer = L.Trainer(max_epochs=args.epoch, logger=logger)
-    trainer = L.Trainer(
-        profiler="simple",
+    trainer = L.Trainer(  # profiler="simple",
         max_epochs=args.epoch,  # max_steps=4,  #
-        logger=[logger, wandb_logger],
-        val_check_interval=0.25,
+        logger=[logger, wandb_logger],  # val_check_interval=0.25,
         log_every_n_steps=10,
         precision=16,
         callbacks=[lr_monitor],
