@@ -72,9 +72,7 @@ def main():
     torch.set_float32_matmul_precision("medium")
 
     # random train validation split
-    train_dataset, val_dataset, _ = torch.utils.data.random_split(
-        dataset, [0.7, 0.15, 0.15]
-    )
+    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     # create dataloaders
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
