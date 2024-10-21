@@ -464,7 +464,7 @@ class GraphLayer(nn.Module):
         x = self.linear1(x)
         x = torch.tanh(x)
         # reshape
-        x = x.view(x.shape[0], self.hidden_size, -1)
+        x = x.view(x.shape[0], -1, self.hidden_size).transpose(1, 2)
         hidden = self.batchnorm(x)
         hidden = hidden.transpose(2, 1)
         x = self.linear2(hidden)
@@ -624,7 +624,7 @@ class FastVNN(nn.Module):
                 # get the output of the other layers
                 x, hidden = self._modules["graph_layer_" + str(i + 1)](x)
 
-        final_input = hidden[:,self.node_id_mapping[self.root]]
+        final_input = hidden[:, self.node_id_mapping[self.root]]
         # aux_layer_out = torch.tanh(self._modules['final_aux_linear_layer'](final_input))
         # aux_out_map['final'] = self._modules['final_linear_layer_output'](aux_layer_out) # this is just a 1 to one with a weight
         # for classification
