@@ -53,6 +53,7 @@ class GenoVNNLightning(L.LightningModule):
         self.acc = BinaryAccuracy()
         # AUROC metric
         self.auroc = AUROC(task="binary")
+        self.auroc_train = AUROC(task="binary")
         self.conf_matrix = ConfusionMatrix(task="binary", num_classes=2)
 
         # self.save_hyperparameters("loss", "optimizer")
@@ -168,6 +169,11 @@ class FastVNNLightning(L.LightningModule):
         # log loss and accuracy
         self.log(
             "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
+        #calculate AUC
+        auc = self.auroc_train(output, targets)
+        self.log(
+            "train_auc", auc, on_step=True, on_epoch=True, prog_bar=False, logger=True
         )
         # calculate accuracy
         preds = (output > 0.5).float()
