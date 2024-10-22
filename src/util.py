@@ -268,8 +268,6 @@ def input_connections(feature_to_node_map, node_id_mapping):
         for inp_pos in feature_to_node_map[node]:
             col.append(inp_pos)  # from input
             row.append(node_id_mapping[node])  # to node
-    col.sort()
-    row.sort()
     return torch.tensor(col, dtype=torch.long), torch.tensor(row, dtype=torch.long)
 
 
