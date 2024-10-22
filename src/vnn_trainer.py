@@ -195,7 +195,7 @@ class FastVNNLightning(L.LightningModule):
             "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
         )
         # calculate accuracy
-        preds = (output > 0.5).float()
+        preds = (output > .5).float()
         acc = self.acc(preds, targets)
         self.log(
             "val_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True
