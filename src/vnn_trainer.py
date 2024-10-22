@@ -205,6 +205,15 @@ class FastVNNLightning(L.LightningModule):
         self.log(
             "val_auc", auc, on_step=False, on_epoch=True, prog_bar=True, logger=True
         )
+        auc = self.auroc(output_logits, targets)
+        self.log(
+            "val_auc_logits",
+            auc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
         util.log_boxplots(self, output, output_logits, targets, "val")
         # update confusion matrix
         self.conf_matrix.update(preds, targets)
