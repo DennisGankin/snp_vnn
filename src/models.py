@@ -450,27 +450,33 @@ class GraphLayer(nn.Module):
         row = out_ids.repeat_interleave(hidden_size) * hidden_size + torch.tensor(
             [0, 1, 2, 3]
         ).repeat(len(out_ids))
-        connections = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
+        connections1 = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
         self.dropout = nn.Dropout(p=dropout)
         self.linear1 = sl.SparseLinear(
-            input_size, output_size * hidden_size, connectivity=connections,# bias=False
+            input_size, output_size * hidden_size, connectivity=connections1, bias=False
         )
         self.batchnorm = nn.BatchNorm1d(hidden_size)
-        self.linear2 = LinearColumns(output_size, hidden_size, 1)
+        #self.linear2 = LinearColumns(output_size, hidden_size, 1)
+        col2 = row
+        row2 = out_ids.repeat_interleave(hidden_size)
+        connections2 = torch.cat((row2.view(1, -1), col2.view(1, -1)), dim=0)
+        self.linear2 = sl.SparseLinear(
+            output_size * hidden_size, output_size, connectivity=connections2, bias=False
+        )
         self.hidden_size = hidden_size
 
     def forward(self, x):
-        x = self.dropout(x)
-        x = self.linear1(x)
-        x = torch.tanh(x)
+        y = self.dropout(x)
+        y = self.linear1(y)
+        y = torch.tanh(y)
         # reshape
-        x = x.view(x.shape[0], -1, self.hidden_size).transpose(1, 2)
-        hidden = self.batchnorm(x)
-        hidden = hidden.transpose(2, 1)
-        x = self.linear2(hidden)
-        x = torch.tanh(x)
+        hidden = y.view(y.shape[0], -1, self.hidden_size)#.transpose(1, 2)
+        #hidden = self.batchnorm(x)
+        #hidden = hidden.transpose(2, 1)
+        y = self.linear2(y)
+        y = torch.tanh(y)
 
-        return x.squeeze(-1), hidden
+        return y , hidden
 
 
 class FastVNN(nn.Module):
@@ -582,7 +588,10 @@ class FastVNN(nn.Module):
 
         # iterate over the layers but skip first because that only gets input
         for i, layer in enumerate(self.graph_layer_list):
+            assert len(layer) == len(set(layer)), "layer has duplicate terms"
             if i == 0:
+                previous_ids = [self.node_id_mapping[node] for node in layer]
+                previous_terms = layer
                 # assert that each term is in term_direct_gene_map
                 for term in layer:
                     assert term in self.term_direct_gene_map
@@ -590,11 +599,25 @@ class FastVNN(nn.Module):
                 # create list of children and list of parents
                 col = []  # parents
                 row = []  # children
+                parent_terms = set()
                 for node in layer:
                     # get a list of children
-                    for child in self.neighbor_map[node]:
-                        row.append(self.node_id_mapping[child])
-                        col.append(self.node_id_mapping[node])
+                    assert len(self.neighbor_map[node]) == len(set(self.neighbor_map[node])), "neighbor node included multiple times"
+                    for parent in self.neighbor_map[node]:
+                        row.append(self.node_id_mapping[node]) # problem here i think
+                        col.append(self.node_id_mapping[parent])
+                        parent_terms.update([parent])
+                
+
+                #combi = [(r,c) for r,c in zip(row, col)]
+                #assert len(combi) == len(set(combi))
+
+                #assert set(col).intersection(previous_ids) == set(col)
+                #assert len(set(row).intersection(previous_ids)) == 0
+
+                #previous_ids+=row
+                #previous_terms = layer
+
                 col = torch.tensor(col, dtype=torch.long)
                 row = torch.tensor(row, dtype=torch.long)
 
@@ -622,7 +645,9 @@ class FastVNN(nn.Module):
                 x, hidden = self._modules["graph_layer_0"](gene_input)
             else:
                 # get the output of the other layers
-                x, hidden = self._modules["graph_layer_" + str(i + 1)](x)
+                y, hidden = self._modules["graph_layer_" + str(i + 1)](x)
+                # state gets zeroed out, add previous state
+                x = y+x
 
         final_input = hidden[:, self.node_id_mapping[self.root]]
         # aux_layer_out = torch.tanh(self._modules['final_aux_linear_layer'](final_input))
