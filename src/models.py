@@ -455,7 +455,7 @@ class GraphLayer(nn.Module):
         self.linear1 = sl.SparseLinear(
             input_size, output_size * hidden_size, connectivity=connections1, bias=False
         )
-        self.batchnorm = nn.BatchNorm1d(hidden_size)
+        #self.batchnorm = nn.BatchNorm1d(hidden_size)
         #self.linear2 = LinearColumns(output_size, hidden_size, 1)
         col2 = row
         row2 = out_ids.repeat_interleave(hidden_size)
@@ -470,9 +470,9 @@ class GraphLayer(nn.Module):
         y = self.linear1(y)
         y = torch.tanh(y)
         # reshape
-        hidden = y.view(y.shape[0], -1, self.hidden_size).transpose(1, 2)
-        hidden = self.batchnorm(hidden)
-        hidden = hidden.transpose(2, 1)
+        hidden = y.view(y.shape[0], -1, self.hidden_size)#.transpose(1, 2)
+        #hidden = self.batchnorm(hidden)
+        #hidden = hidden.transpose(2, 1)
         y = self.linear2(y)
         y = torch.tanh(y)
 
