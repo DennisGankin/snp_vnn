@@ -64,16 +64,17 @@ class GeneModule(nn.Module):
 
 
 class CompleteGeneModule(nn.Module):
-    def __init__(self, num_genes, gene_feature_dim, gene_out_dim=1):
+    def __init__(self, num_genes, gene_feature_dim, gene_out_dim=1, activation = torch.tanh):
         super(CompleteGeneModule, self).__init__()
         self.linear = LinearColumns(num_genes, gene_feature_dim, gene_out_dim)
         self.batchnorm = nn.BatchNorm1d(
             1
         )  # might normalizing across gene inputs be better?
+        self.activation = activation
 
     def forward(self, x):
         x = self.linear(x)
-        x = torch.tanh(x)
+        x = self.activation(x)
         # permute for batchnorm
         # x = x.permute(0, 2, 1)  # (N, L, C) -> (N, C, L) , C being channels
         x = x.transpose(2, 1)
@@ -442,10 +443,11 @@ class GenoVNN(nn.Module):
 
 class GraphLayer(nn.Module):
     def __init__(
-        self, input_size, output_size, hidden_size, in_ids, out_ids, dropout=0
+        self, input_size, output_size, hidden_size, in_ids, out_ids, dropout=0, activation=torch.tanh
     ):
         super(GraphLayer, self).__init__()
 
+        self.out_ids = out_ids
         col = in_ids.repeat_interleave(hidden_size)
         row = out_ids.repeat_interleave(hidden_size) * hidden_size + torch.tensor(
             [0, 1, 2, 3]
@@ -453,30 +455,40 @@ class GraphLayer(nn.Module):
         connections1 = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
         self.dropout = nn.Dropout(p=dropout)
         self.linear1 = sl.SparseLinear(
-            input_size, output_size * hidden_size, connectivity=connections1, bias=False
+            input_size, output_size * hidden_size, connectivity=connections1, bias=True
         )
+        # bias mask (only keep bias for the out_ids)
+        self.bias_mask1 = torch.zeros(output_size*hidden_size)
+        self.bias_mask1[row] = 1
         #self.batchnorm = nn.BatchNorm1d(hidden_size)
         #self.linear2 = LinearColumns(output_size, hidden_size, 1)
         col2 = row
         row2 = out_ids.repeat_interleave(hidden_size)
         connections2 = torch.cat((row2.view(1, -1), col2.view(1, -1)), dim=0)
         self.linear2 = sl.SparseLinear(
-            output_size * hidden_size, output_size, connectivity=connections2, bias=False
+            output_size * hidden_size, output_size, connectivity=connections2, bias=True
         )
+        self.bias_mask2 = torch.zeros(output_size)
+        self.bias_mask2[row2] = 1
         self.hidden_size = hidden_size
+        self.activation = activation
 
     def forward(self, x):
         y = self.dropout(x)
         y = self.linear1(y)
-        y = torch.tanh(y)
+        # zero out bias
+        y = y * self.bias_mask1
+        y = self.activation(y)
         # reshape
         hidden = y.view(y.shape[0], -1, self.hidden_size)#.transpose(1, 2)
         #hidden = self.batchnorm(hidden)
         #hidden = hidden.transpose(2, 1)
         y = self.linear2(y)
-        y = torch.tanh(y)
+        # zero out bias
+        y = y * self.bias_mask2
+        y = self.activation(y)
 
-        return y , hidden
+        return y, hidden
 
 
 class FastVNN(nn.Module):
@@ -630,6 +642,7 @@ class FastVNN(nn.Module):
                         col,
                         row,
                         self.dropout_fraction,
+                        activation=torch.nn.functional.leaky_relu
                     ),
                 )
 
