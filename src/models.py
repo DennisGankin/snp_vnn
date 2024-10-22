@@ -541,7 +541,7 @@ class FastVNN(nn.Module):
 
         # add module for final layer
         self.add_module(
-            "final_aux_linear_layer", nn.Linear(self.num_hiddens_genotype, 1)
+            "final_aux_linear_layer", nn.Linear(self.num_hiddens_genotype, 1, bias=False)
         )
         self.add_module("final_linear_layer_output", nn.Linear(1, 1))
 
