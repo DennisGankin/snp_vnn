@@ -170,7 +170,7 @@ class FastVNNLightning(L.LightningModule):
         self.log(
             "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
         )
-        #calculate AUC
+        # calculate AUC
         auc = self.auroc_train(output, targets)
         self.log(
             "train_auc", auc, on_step=True, on_epoch=True, prog_bar=False, logger=True
@@ -195,7 +195,7 @@ class FastVNNLightning(L.LightningModule):
             "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
         )
         # calculate accuracy
-        preds = (output > .5).float()
+        preds = (output > 0.5).float()
         acc = self.acc(preds, targets)
         self.log(
             "val_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True
@@ -205,6 +205,7 @@ class FastVNNLightning(L.LightningModule):
         self.log(
             "val_auc", auc, on_step=False, on_epoch=True, prog_bar=True, logger=True
         )
+        util.log_boxplots(self, output, output_logits, targets, "val")
         # update confusion matrix
         self.conf_matrix.update(preds, targets)
         return loss

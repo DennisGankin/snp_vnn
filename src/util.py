@@ -336,3 +336,47 @@ def log_confusion_matrix(module, confmat):
     # 			logger.log_image(key="conf_matrix", images=[img], caption=["confusion_matrix"])
 
     plt.close(fig)
+
+
+def log_boxplots(module, preds, logits, targets, val="val"):
+    """
+    Plot box plots of logits and probabilities, grouped by true labels (targets).
+
+    Args:
+        logits (torch.Tensor): The predicted logits (unnormalized scores).
+        targets (torch.Tensor): The true labels.
+    """
+    # Convert tensors to numpy for plotting
+    logits_np = logits.detach().cpu().numpy()
+    preds_np = preds.detach().cpu().numpy()
+    targets_np = targets.detach().cpu().numpy()
+
+    # Create a figure with two subplots
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+
+    # Plot boxplot for logits
+    sns.boxplot(x=targets_np, y=logits_np, ax=ax[0])
+    ax[0].set_title("Logits Distribution")
+    ax[0].set_xlabel("True Label")
+    ax[0].set_ylabel("Logits")
+
+    # Plot boxplot for probabilities
+    sns.boxplot(x=targets_np, y=preds_np, ax=ax[1])
+    ax[1].set_title("Probabilities Distribution")
+    ax[1].set_xlabel("True Label")
+    ax[1].set_ylabel("Probability")
+
+    # Convert the matplotlib plot to a PNG image and log it to TensorBoard
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+
+    img = Image.open(buf)
+    img = np.array(img)
+    # image = plt.imread(buf)
+    # loop through loggers and log the image
+    module.logger.experiment.add_image(
+        "box_plot_" + val, img, module.current_epoch, dataformats="HWC"
+    )
+
+    plt.close(fig)
