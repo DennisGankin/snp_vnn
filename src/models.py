@@ -64,7 +64,9 @@ class GeneModule(nn.Module):
 
 
 class CompleteGeneModule(nn.Module):
-    def __init__(self, num_genes, gene_feature_dim, gene_out_dim=1, activation = torch.tanh):
+    def __init__(
+        self, num_genes, gene_feature_dim, gene_out_dim=1, activation=torch.tanh
+    ):
         super(CompleteGeneModule, self).__init__()
         self.linear = LinearColumns(num_genes, gene_feature_dim, gene_out_dim)
         self.batchnorm = nn.BatchNorm1d(
@@ -443,7 +445,14 @@ class GenoVNN(nn.Module):
 
 class GraphLayer(nn.Module):
     def __init__(
-        self, input_size, output_size, hidden_size, in_ids, out_ids, dropout=0, activation=torch.tanh
+        self,
+        input_size,
+        output_size,
+        hidden_size,
+        in_ids,
+        out_ids,
+        dropout=0,
+        activation=torch.tanh,
     ):
         super(GraphLayer, self).__init__()
 
@@ -455,18 +464,21 @@ class GraphLayer(nn.Module):
         connections1 = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
         self.dropout = nn.Dropout(p=dropout)
         self.linear1 = sl.SparseLinear(
-            input_size, output_size * hidden_size, connectivity=connections1, bias=True
+            input_size, output_size * hidden_size, connectivity=connections1, bias=False
         )
         # bias mask (only keep bias for the out_ids)
-        self.bias_mask1 = torch.zeros(output_size*hidden_size)
+        self.bias_mask1 = torch.zeros(output_size * hidden_size)
         self.bias_mask1[row] = 1
-        #self.batchnorm = nn.BatchNorm1d(hidden_size)
-        #self.linear2 = LinearColumns(output_size, hidden_size, 1)
+        # self.batchnorm = nn.BatchNorm1d(hidden_size)
+        # self.linear2 = LinearColumns(output_size, hidden_size, 1)
         col2 = row
         row2 = out_ids.repeat_interleave(hidden_size)
         connections2 = torch.cat((row2.view(1, -1), col2.view(1, -1)), dim=0)
         self.linear2 = sl.SparseLinear(
-            output_size * hidden_size, output_size, connectivity=connections2, bias=True
+            output_size * hidden_size,
+            output_size,
+            connectivity=connections2,
+            bias=False,
         )
         self.bias_mask2 = torch.zeros(output_size)
         self.bias_mask2[row2] = 1
@@ -477,15 +489,15 @@ class GraphLayer(nn.Module):
         y = self.dropout(x)
         y = self.linear1(y)
         # zero out bias
-        y = y * self.bias_mask1
+        # y = y * self.bias_mask1
         y = self.activation(y)
         # reshape
-        hidden = y.view(y.shape[0], -1, self.hidden_size)#.transpose(1, 2)
-        #hidden = self.batchnorm(hidden)
-        #hidden = hidden.transpose(2, 1)
+        hidden = y.view(y.shape[0], -1, self.hidden_size)  # .transpose(1, 2)
+        # hidden = self.batchnorm(hidden)
+        # hidden = hidden.transpose(2, 1)
         y = self.linear2(y)
         # zero out bias
-        y = y * self.bias_mask2
+        # y = y * self.bias_mask2
         y = self.activation(y)
 
         return y, hidden
@@ -553,7 +565,8 @@ class FastVNN(nn.Module):
 
         # add module for final layer
         self.add_module(
-            "final_aux_linear_layer", nn.Linear(self.num_hiddens_genotype, 1, bias=False)
+            "final_aux_linear_layer",
+            nn.Linear(self.num_hiddens_genotype, 1, bias=False),
         )
         self.add_module("final_linear_layer_output", nn.Linear(1, 1))
 
@@ -614,21 +627,22 @@ class FastVNN(nn.Module):
                 parent_terms = set()
                 for node in layer:
                     # get a list of children
-                    assert len(self.neighbor_map[node]) == len(set(self.neighbor_map[node])), "neighbor node included multiple times"
+                    assert len(self.neighbor_map[node]) == len(
+                        set(self.neighbor_map[node])
+                    ), "neighbor node included multiple times"
                     for parent in self.neighbor_map[node]:
-                        row.append(self.node_id_mapping[node]) # problem here i think
+                        row.append(self.node_id_mapping[node])  # problem here i think
                         col.append(self.node_id_mapping[parent])
                         parent_terms.update([parent])
-                
 
-                #combi = [(r,c) for r,c in zip(row, col)]
-                #assert len(combi) == len(set(combi))
+                # combi = [(r,c) for r,c in zip(row, col)]
+                # assert len(combi) == len(set(combi))
 
-                #assert set(col).intersection(previous_ids) == set(col)
-                #assert len(set(row).intersection(previous_ids)) == 0
+                # assert set(col).intersection(previous_ids) == set(col)
+                # assert len(set(row).intersection(previous_ids)) == 0
 
-                #previous_ids+=row
-                #previous_terms = layer
+                # previous_ids+=row
+                # previous_terms = layer
 
                 col = torch.tensor(col, dtype=torch.long)
                 row = torch.tensor(row, dtype=torch.long)
@@ -642,7 +656,7 @@ class FastVNN(nn.Module):
                         col,
                         row,
                         self.dropout_fraction,
-                        activation=torch.nn.functional.leaky_relu
+                        activation=torch.nn.functional.leaky_relu,
                     ),
                 )
 
@@ -660,7 +674,7 @@ class FastVNN(nn.Module):
                 # get the output of the other layers
                 y, hidden = self._modules["graph_layer_" + str(i + 1)](x)
                 # state gets zeroed out, add previous state
-                x = y+x
+                x = y + x
 
         final_input = hidden[:, self.node_id_mapping[self.root]]
         # aux_layer_out = torch.tanh(self._modules['final_aux_linear_layer'](final_input))
