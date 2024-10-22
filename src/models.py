@@ -482,6 +482,7 @@ class GraphLayer(nn.Module):
         )
         self.bias_mask2 = torch.zeros(output_size)
         self.bias_mask2[row2] = 1
+        self.bn_mask = self.bias_mask2 == 1
         self.hidden_size = hidden_size
         self.activation = activation
 
@@ -495,15 +496,16 @@ class GraphLayer(nn.Module):
         hidden = y.view(y.shape[0], -1, self.hidden_size).transpose(1, 2)
         selected_hidden = hidden[:, :,self.bias_mask2==1]
         selected_hidden = self.batchnorm(selected_hidden)
-        hidden[:, :, self.bias_mask2==1] = selected_hidden
-        hidden = hidden.transpose(2, 1)
-        y = hidden.view(y.shape[0], -1)
+        hidden_out = hidden.clone()
+        hidden_out[:, :, self.bias_mask2==1] = selected_hidden
+        hidden_out = hidden_out.transpose(2, 1)
+        y = hidden_out.view(y.shape[0], -1)
         y = self.linear2(y)
         # zero out bias
         # y = y * self.bias_mask2
         y = self.activation(y)
 
-        return y, hidden
+        return y, hidden_out
 
 
 class FastVNN(nn.Module):
