@@ -26,11 +26,11 @@ def main():
         "train": "../labels.csv",
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
-        "epoch": 5,
+        "epoch": 20,
         "lr": 0.0001,
         "wd": 0.001,
         "alpha": 0.3,
-        "batchsize": 264,  # 33840,
+        "batchsize": 256,  # 33840,
         "modeldir": "/model_test/",
         "cuda": 0,
         "gene2id": "../ukb_snp_ids.csv",
