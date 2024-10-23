@@ -468,8 +468,10 @@ class GraphLayer(nn.Module):
         )
         # bias mask (only keep bias for the out_ids)
         self.bias_mask1 = torch.zeros(output_size * hidden_size)
-        self.bias_mask1[row] = 1
-        self.batchnorm = nn.BatchNorm1d(hidden_size)
+        # self.bias_mask1[row] = 1
+        # batch norm across batch but for each hidden feature in each term
+        self.batchnorm = nn.BatchNorm1d(hidden_size * output_size)
+        # self.batchnorm = nn.BatchNorm1d(hidden_size)
         # self.linear2 = LinearColumns(output_size, hidden_size, 1)
         col2 = row
         row2 = out_ids.repeat_interleave(hidden_size)
@@ -482,7 +484,6 @@ class GraphLayer(nn.Module):
         )
         self.bias_mask2 = torch.zeros(output_size)
         self.bias_mask2[row2] = 1
-        self.bn_mask = self.bias_mask2 == 1
         self.hidden_size = hidden_size
         self.activation = activation
 
@@ -492,20 +493,25 @@ class GraphLayer(nn.Module):
         # zero out bias
         # y = y * self.bias_mask1
         y = self.activation(y)
+        # batch norm
+        # selected_y = y[:, self.bias_mask1 == 1]
+        y = self.batchnorm(y)
+        # y_out = y.clone()
+        # y_out[:, self.bias_mask1 == 1] = selected_y
         # reshape
-        hidden = y.view(y.shape[0], -1, self.hidden_size).transpose(1, 2)
-        selected_hidden = hidden[:, :, self.bias_mask2 == 1]
-        selected_hidden = self.batchnorm(selected_hidden)
-        hidden_out = hidden.clone()
-        hidden_out[:, :, self.bias_mask2 == 1] = selected_hidden
-        hidden_out = hidden_out.transpose(2, 1)
-        y = hidden_out.view(y.shape[0], -1)
+        hidden = y.view(y.shape[0], -1, self.hidden_size)  # .transpose(1, 2)
+        # selected_hidden = hidden[:, :, self.bias_mask2 == 1]
+        # selected_hidden = self.batchnorm(selected_hidden)
+        # hidden_out = hidden.clone()
+        # hidden_out[:, :, self.bias_mask2 == 1] = selected_hidden
+        # hidden_out = hidden_out.transpose(2, 1)
+        # y = hidden_out.view(y.shape[0], -1)
         y = self.linear2(y)
         # zero out bias
         # y = y * self.bias_mask2
         y = self.activation(y)
 
-        return y, hidden_out
+        return y, hidden
 
 
 class FastVNN(nn.Module):
