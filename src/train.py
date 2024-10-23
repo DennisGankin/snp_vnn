@@ -27,7 +27,7 @@ def main():
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 30,
-        "lr": 0.001,
+        "lr": 0.0001,
         "wd": 0.001,
         "alpha": 0.3,
         "batchsize": 512,  # 33840,
@@ -42,8 +42,8 @@ def main():
         "delta": 0.001,
         "min_dropout_layer": 2,
         "dropout_fraction": 0.3,
-        "lr_step_size": 10,
-        "activation": "leaky_relu",
+        "lr_step_size": 20,
+        "activation": "tanh",
     }
     args = make_dataclass(
         "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
