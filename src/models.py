@@ -494,10 +494,10 @@ class GraphLayer(nn.Module):
         y = self.activation(y)
         # reshape
         hidden = y.view(y.shape[0], -1, self.hidden_size).transpose(1, 2)
-        selected_hidden = hidden[:, :,self.bias_mask2==1]
+        selected_hidden = hidden[:, :, self.bias_mask2 == 1]
         selected_hidden = self.batchnorm(selected_hidden)
         hidden_out = hidden.clone()
-        hidden_out[:, :, self.bias_mask2==1] = selected_hidden
+        hidden_out[:, :, self.bias_mask2 == 1] = selected_hidden
         hidden_out = hidden_out.transpose(2, 1)
         y = hidden_out.view(y.shape[0], -1)
         y = self.linear2(y)
@@ -534,6 +534,16 @@ class FastVNN(nn.Module):
         # No of input features per gene
         self.feature_dim = args.feature_dim
 
+        if args.activation == "tanh":
+            self.activation = torch.tanh
+        elif args.activation == "relu":
+            self.activation = torch.relu
+        elif args.activation == "leaky_relu":
+            self.activation = torch.nn.functional.leaky_relu
+        else:
+            self.activation = torch.tanh
+            print("Activation choice unclear, using tanh: ", args.activation)
+
         self.term_gene_in_map = {}
 
         # node to i mapping
@@ -561,6 +571,7 @@ class FastVNN(nn.Module):
                 in_col,
                 in_row,
                 self.dropout_fraction,
+                activation=self.activation,
             ),
         )
 
@@ -661,7 +672,7 @@ class FastVNN(nn.Module):
                         col,
                         row,
                         self.dropout_fraction,
-                        activation=torch.nn.functional.leaky_relu,
+                        activation=self.activation,
                     ),
                 )
 
