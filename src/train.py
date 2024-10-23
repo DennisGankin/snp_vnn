@@ -26,7 +26,7 @@ def main():
         "train": "../labels.csv",
         "label_col": "bc_reported",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
-        "epoch": 10,
+        "epoch": 30,
         "lr": 0.0001,
         "wd": 0.001,
         "alpha": 0.3,
