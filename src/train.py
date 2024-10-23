@@ -42,8 +42,8 @@ def main():
         "delta": 0.001,
         "min_dropout_layer": 2,
         "dropout_fraction": 0.3,
-        "lr_step_size": 20,
-        "activation": "tanh",
+        "lr_step_size": 30,
+        "activation": "leaky_relu",
     }
     args = make_dataclass(
         "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
