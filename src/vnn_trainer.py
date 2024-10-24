@@ -137,7 +137,7 @@ class FastVNNLightning(L.LightningModule):
 
         # loss as BCE loss
         # self.loss = nn.BCEWithLogitsLoss()
-        self.loss = sigmoid_focal_loss
+        self.loss = lambda x, y: sigmoid_focal_loss(x, y, reduction="mean")
         # self.loss = nn.BCEWithLogitsLoss(pos_weight=self.weights)
         # accuracy metric
         self.acc = BinaryAccuracy()
