@@ -181,6 +181,8 @@ class FastVNNLightning(L.LightningModule):
         self.log(
             "train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True
         )
+        if batch_idx == 0:
+            util.log_boxplots(self, output, output_logits, targets, "train")
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -214,7 +216,8 @@ class FastVNNLightning(L.LightningModule):
             prog_bar=True,
             logger=True,
         )
-        util.log_boxplots(self, output, output_logits, targets, "val")
+        if batch_idx == 0:
+            util.log_boxplots(self, output, output_logits, targets, "val")
         # update confusion matrix
         self.conf_matrix.update(preds, targets)
         return loss
