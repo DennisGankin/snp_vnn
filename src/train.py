@@ -30,7 +30,7 @@ def main():
         "lr": 0.0001,
         "wd": 0.001,
         "alpha": 0.3,
-        "batchsize": 512,  # 33840,
+        "batchsize": 256,  # 33840,
         "modeldir": "/model_test/",
         "cuda": 0,
         "gene2id": "../ukb_snp_ids.csv",
