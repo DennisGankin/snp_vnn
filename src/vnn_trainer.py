@@ -16,6 +16,8 @@ import lightning as L
 from torchmetrics.classification import BinaryAccuracy
 from torchmetrics import AUROC, ConfusionMatrix
 
+from torchvision.ops import sigmoid_focal_loss
+
 
 class GenoVNNLightning(L.LightningModule):
     def __init__(self, args, graph):
@@ -134,7 +136,8 @@ class FastVNNLightning(L.LightningModule):
         # self.save_hyperparameters()
 
         # loss as BCE loss
-        self.loss = nn.BCEWithLogitsLoss()
+        # self.loss = nn.BCEWithLogitsLoss()
+        self.loss = sigmoid_focal_loss
         # self.loss = nn.BCEWithLogitsLoss(pos_weight=self.weights)
         # accuracy metric
         self.acc = BinaryAccuracy()
