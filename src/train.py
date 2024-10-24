@@ -42,7 +42,7 @@ def main():
         "delta": 0.001,
         "min_dropout_layer": 2,
         "dropout_fraction": 0.3,
-        "lr_step_size": 30,
+        "lr_step_size": 20,
         "activation": "tanh",
     }
     args = make_dataclass(
