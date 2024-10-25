@@ -61,7 +61,7 @@ class GenoVNNLightning(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.AdamW(
-            self.model.parameters(), lr=self.args.lr
+            self.model.parameters(), lr=self.args.lr, weight_decay=0.1
         )  # , betas=(0.9, 0.99), eps=1e-05, weight_decay=self.data_wrapper.lr)
         scheduler = StepLR(optimizer, step_size=self.args.lr_step_size, gamma=0.1)
         return {
