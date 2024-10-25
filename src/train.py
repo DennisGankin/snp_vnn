@@ -34,7 +34,7 @@ def main():
         "modeldir": "/model_test/",
         "cuda": 0,
         "gene2id": "../ukb_snp_ids.csv",
-        "genotype_hiddens": 4,
+        "genotype_hiddens": 2,
         "optimize": 1,
         "zscore_method": "auc",
         "std": "/model_test/std.txt",
