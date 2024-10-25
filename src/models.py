@@ -669,7 +669,7 @@ class FastVNN(nn.Module):
                 col = torch.tensor(col, dtype=torch.long)
                 row = torch.tensor(row, dtype=torch.long)
 
-                if i >= self.min_dropout_layer:
+                if i <= self.min_dropout_layer:
                     dropout = self.dropout_fraction
                 else:
                     dropout = 0

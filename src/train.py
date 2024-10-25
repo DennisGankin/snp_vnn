@@ -26,7 +26,7 @@ def main():
         "train": "../labels.csv",
         "label_col": "has_cacner",  # "bc_reported", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
-        "epoch": 30,
+        "epoch": 20,
         "lr": 0.0001,
         "wd": 0.001,
         "alpha": 0.3,
@@ -40,7 +40,7 @@ def main():
         "std": "/model_test/std.txt",
         "patience": 30,
         "delta": 0.001,
-        "min_dropout_layer": 2,
+        "min_dropout_layer": 10,
         "dropout_fraction": 0.3,
         "lr_step_size": 10,
         "activation": "leaky_relu",
