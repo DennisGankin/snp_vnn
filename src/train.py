@@ -102,7 +102,7 @@ def main():
 
     # Initialize WandbLogger
     wandb_logger = WandbLogger(
-        project="vnn_ukb_breast_cancer", name="nest_snplevel_matched" + curr_time
+        project="vnn_ukb_breast_cancer", name="nest_snplevel" + curr_time
     )
     logger = TensorBoardLogger(
         name="nest_ukb_model_" + curr_time, save_dir="/home/dnanexus/lightning_logs"
