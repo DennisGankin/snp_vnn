@@ -42,7 +42,7 @@ def main():
         "delta": 0.001,
         "min_dropout_layer": 2,
         "dropout_fraction": 0.3,
-        "lr_step_size": 20,
+        "lr_step_size": 10,
         "activation": "leaky_relu",
     }
     args = make_dataclass(
