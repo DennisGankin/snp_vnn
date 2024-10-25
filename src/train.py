@@ -24,7 +24,7 @@ def main():
     argument_dict = {
         "onto": "../ontology.txt",
         "train": "../labels.csv",
-        "label_col": "has_cacner",  # "bc_reported", # new for ukb
+        "label_col": "has_cancer",  # "bc_reported", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 20,
         "lr": 0.0001,
