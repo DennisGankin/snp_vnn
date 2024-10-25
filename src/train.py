@@ -24,7 +24,7 @@ def main():
     argument_dict = {
         "onto": "../ontology.txt",
         "train": "../labels.csv",
-        "label_col": "bc_reported",  # "has_cancer", # new for ukb
+        "label_col": "has_cacner",  # "bc_reported", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 30,
         "lr": 0.0001,
@@ -102,7 +102,7 @@ def main():
 
     # Initialize WandbLogger
     wandb_logger = WandbLogger(
-        project="vnn_ukb_breast_cancer", name="nest_snplevel_" + curr_time
+        project="vnn_ukb_breast_cancer", name="nest_snplevel_matched" + curr_time
     )
     logger = TensorBoardLogger(
         name="nest_ukb_model_" + curr_time, save_dir="/home/dnanexus/lightning_logs"
