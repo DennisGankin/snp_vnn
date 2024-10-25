@@ -458,12 +458,12 @@ class GraphLayer(nn.Module):
 
         self.out_ids = out_ids
         col = in_ids.repeat_interleave(hidden_size)
-        row = out_ids.repeat_interleave(hidden_size) * hidden_size + torch.tensor(
-            [0, 1, 2, 3]
+        row = out_ids.repeat_interleave(hidden_size) * hidden_size + torch.arange(
+            hidden_size
         ).repeat(len(out_ids))
         connections1 = torch.cat((row.view(1, -1), col.view(1, -1)), dim=0)
         self.dropout1 = nn.Dropout(p=dropout)
-        self.dropout2 = nn.Dropout(p=dropout*1.5)
+        self.dropout2 = nn.Dropout(p=dropout * 1.5)
         self.linear1 = sl.SparseLinear(
             input_size, output_size * hidden_size, connectivity=connections1, bias=False
         )
