@@ -576,7 +576,7 @@ class FastVNN(nn.Module):
                 self.num_hiddens_genotype,
                 in_col,
                 in_row,
-                self.dropout_fraction,
+                0,  # self.dropout_fraction,
                 activation=self.activation,
             ),
         )
@@ -669,6 +669,11 @@ class FastVNN(nn.Module):
                 col = torch.tensor(col, dtype=torch.long)
                 row = torch.tensor(row, dtype=torch.long)
 
+                if i >= self.min_dropout_layer:
+                    dropout = self.dropout_fraction
+                else:
+                    dropout = 0
+
                 self.add_module(
                     "graph_layer_" + str(i + 1),
                     GraphLayer(
@@ -677,7 +682,7 @@ class FastVNN(nn.Module):
                         self.num_hiddens_genotype,
                         col,
                         row,
-                        self.dropout_fraction,
+                        dropout,
                         activation=self.activation,
                     ),
                 )
