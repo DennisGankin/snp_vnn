@@ -507,7 +507,7 @@ class GraphLayer(nn.Module):
         # hidden_out[:, :, self.bias_mask2 == 1] = selected_hidden
         # hidden_out = hidden_out.transpose(2, 1)
         # y = hidden_out.view(y.shape[0], -1)
-        y = y.dropout2(y)
+        y = self.dropout2(y)
         y = self.linear2(y)
         # zero out bias
         # y = y * self.bias_mask2
