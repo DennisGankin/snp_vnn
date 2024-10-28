@@ -14,7 +14,7 @@ from .models import *
 
 import lightning as L
 from torchmetrics.classification import BinaryAccuracy
-from torchmetrics import AUROC, ConfusionMatrix
+from torchmetrics import AUROC, ConfusionMatrix, PearsonCorrCoef
 
 from torchvision.ops import sigmoid_focal_loss
 
@@ -244,9 +244,9 @@ class FastVNNLitReg(L.LightningModule):
 
         # MSE loss
         self.loss = nn.MSELoss()
-        # AUROC metric
-        self.auroc = AUROC(task="binary")
-        self.auroc_train = AUROC(task="binary")
+        # Pearson metric
+        self.pearson_train = PearsonCorrCoef()
+        self.pearson_val = PearsonCorrCoef()
 
         # self.save_hyperparameters("loss", "optimizer")
 
@@ -273,9 +273,14 @@ class FastVNNLitReg(L.LightningModule):
             "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
         )
         # calculate AUC
-        auc = self.auroc_train(output_logits, targets)
+        pearson = self.pearson_train(output_logits, targets)
         self.log(
-            "train_auc", auc, on_step=True, on_epoch=True, prog_bar=False, logger=True
+            "train_pearson",
+            pearson,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
         )
 
         # if batch_idx == 0:
@@ -292,20 +297,17 @@ class FastVNNLitReg(L.LightningModule):
         self.log(
             "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
         )
-        # Compute AUC
-        auc = self.auroc(output_logits, targets)
+        # Compute pearson
+        pearson = self.pearson_val(output_logits, targets)
         self.log(
-            "val_auc", auc, on_step=False, on_epoch=True, prog_bar=True, logger=True
-        )
-        auc = self.auroc(output_logits, targets)
-        self.log(
-            "val_auc_logits",
-            auc,
+            "val_pearson",
+            pearson,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
             logger=True,
         )
+
         # if batch_idx == 0:
         #    util.log_boxplots(self, output, output_logits, targets, "val")
         # update confusion matrix
