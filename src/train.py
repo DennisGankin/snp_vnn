@@ -44,7 +44,7 @@ def main():
         "dropout_fraction": 0.3,
         "lr_step_size": 5,
         "activation": "leaky_relu",
-        "task": "classification",
+        "task": "regression",
     }
     args = make_dataclass(
         "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
