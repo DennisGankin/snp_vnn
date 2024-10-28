@@ -232,3 +232,82 @@ class FastVNNLightning(L.LightningModule):
         util.log_confusion_matrix(self, confmat)
         # Reset confusion matrix metric for the next epoch
         self.conf_matrix.reset()
+
+
+class FastVNNLitReg(L.LightningModule):
+    def __init__(self, args, graph):
+        super().__init__()
+        self.args = args
+        self.model = FastVNN(self.args, graph)
+        # save hyper params
+        # self.save_hyperparameters()
+
+        # MSE loss
+        self.loss = nn.MSELoss()
+        # AUROC metric
+        self.auroc = AUROC(task="binary")
+        self.auroc_train = AUROC(task="binary")
+
+        # self.save_hyperparameters("loss", "optimizer")
+
+    def configure_optimizers(self):
+        optimizer = optim.AdamW(
+            self.model.parameters(), lr=self.args.lr
+        )  # , betas=(0.9, 0.99), eps=1e-05, weight_decay=self.data_wrapper.lr)
+        scheduler = StepLR(optimizer, step_size=self.args.lr_step_size, gamma=0.1)
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
+        }
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        inputs, targets = batch
+        aux_out_map, _ = self.model(inputs)
+        output_logits = aux_out_map["final_logits"].squeeze(1)
+        loss = self.loss(output_logits, targets)
+        # log loss and accuracy
+        self.log(
+            "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
+        # calculate AUC
+        auc = self.auroc_train(output_logits, targets)
+        self.log(
+            "train_auc", auc, on_step=True, on_epoch=True, prog_bar=False, logger=True
+        )
+
+        # if batch_idx == 0:
+        #    util.log_boxplots(self, output, output_logits, targets, "train")
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        inputs, targets = batch
+        aux_out_map, _ = self.model(inputs)
+        output_logits = aux_out_map["final_logits"].squeeze(1)
+        loss = self.loss(output_logits, targets)
+        # log loss and accuracy
+        self.log(
+            "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
+        # Compute AUC
+        auc = self.auroc(output_logits, targets)
+        self.log(
+            "val_auc", auc, on_step=False, on_epoch=True, prog_bar=True, logger=True
+        )
+        auc = self.auroc(output_logits, targets)
+        self.log(
+            "val_auc_logits",
+            auc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
+        # if batch_idx == 0:
+        #    util.log_boxplots(self, output, output_logits, targets, "val")
+        # update confusion matrix
+        # self.conf_matrix.update(preds, targets)
+        return loss

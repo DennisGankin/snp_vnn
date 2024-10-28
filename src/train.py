@@ -6,7 +6,7 @@ import pandas as pd
 import lightning as L
 
 from .datasets import UKBSnpLevelDatasetH5
-from .vnn_trainer import GenoVNNLightning, FastVNNLightning
+from .vnn_trainer import GenoVNNLightning, FastVNNLightning, FastVNNLitReg
 from .graphs import GeneOntology
 
 from lightning.pytorch.loggers import WandbLogger
@@ -24,7 +24,7 @@ def main():
     argument_dict = {
         "onto": "../ontology.txt",
         "train": "../labels.csv",
-        "label_col": "bc_reported",  # "has_cancer", # new for ukb
+        "label_col": "height",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
         "epoch": 10,
         "lr": 0.0001,
@@ -44,6 +44,7 @@ def main():
         "dropout_fraction": 0.3,
         "lr_step_size": 5,
         "activation": "leaky_relu",
+        "task": "classification",
     }
     args = make_dataclass(
         "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
@@ -57,7 +58,12 @@ def main():
     graph = GeneOntology(dataset.gene_id_mapping, args.onto, child_node="snp")
 
     ##### load DL model
-    go_vnn_model = FastVNNLightning(args, graph)  # GenoVNNLightning(args, graph)
+    if args.task == "classification":
+        print("Classification task")
+        go_vnn_model = FastVNNLightning(args, graph)  # GenoVNNLightning(args, graph)
+    else:
+        print("Regression task")
+        go_vnn_model = FastVNNLitReg(args, graph)
     pytorch_total_params = sum(
         p.numel() for p in go_vnn_model.parameters() if p.requires_grad
     )
@@ -102,7 +108,7 @@ def main():
 
     # Initialize WandbLogger
     wandb_logger = WandbLogger(
-        project="vnn_ukb_breast_cancer", name="nest_snplevel" + curr_time
+        project="vnn_ukb_breast_cancer", name="nest_height" + curr_time
     )
     logger = TensorBoardLogger(
         name="nest_ukb_model_" + curr_time, save_dir="/home/dnanexus/lightning_logs"
