@@ -13,6 +13,9 @@ from PIL import Image
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+sns.set_theme("talk")
+
 import io
 
 # import wandb
@@ -377,6 +380,39 @@ def log_boxplots(module, preds, logits, targets, val="val"):
     # loop through loggers and log the image
     module.logger.experiment.add_image(
         "box_plot_" + val, img, module.current_epoch, dataformats="HWC"
+    )
+
+    plt.close(fig)
+
+
+def log_scatter(module, preds, targets, val="val"):
+    """
+    Scatter plot of predictions against targets.
+    """
+    # Convert tensors to numpy for plotting
+    preds_np = preds.detach().cpu().numpy()
+    targets_np = targets.detach().cpu().numpy()
+
+    # Create a figure with two subplots
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    # Plot scatter plot
+    sns.scatterplot(x=targets_np, y=preds_np, ax=ax)
+    ax.set_title("Predictions vs. Targets")
+    ax.set_xlabel("True Label")
+    ax.set_ylabel("Predicted Label")
+
+    # Convert the matplotlib plot to a PNG image and log it to TensorBoard
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+
+    img = Image.open(buf)
+    img = np.array(img)
+    # image = plt.imread(buf)
+    # loop through loggers and log the image
+    module.logger.experiment.add_image(
+        "scatterplot_" + val, img, module.current_epoch, dataformats="HWC"
     )
 
     plt.close(fig)
