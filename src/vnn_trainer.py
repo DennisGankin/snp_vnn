@@ -283,8 +283,8 @@ class FastVNNLitReg(L.LightningModule):
             logger=True,
         )
 
-        # if batch_idx == 0:
-        #    util.log_boxplots(self, output, output_logits, targets, "train")
+        if batch_idx == 0:
+            util.log_scatter(self, output_logits, targets, "train")
 
         return loss
 
@@ -308,8 +308,8 @@ class FastVNNLitReg(L.LightningModule):
             logger=True,
         )
 
-        # if batch_idx == 0:
-        #    util.log_boxplots(self, output, output_logits, targets, "val")
+        if batch_idx == 0:
+            util.log_scatter(self, output_logits, targets, "val")
         # update confusion matrix
         # self.conf_matrix.update(preds, targets)
         return loss
