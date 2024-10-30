@@ -26,7 +26,7 @@ def main():
         "train": "../labels.csv",
         "label_col": "height",  # "has_cancer", # new for ukb
         "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
-        "epoch": 15,
+        "epoch": 25,
         "lr": 0.01,
         "wd": 0.001,
         "alpha": 0.3,
@@ -42,7 +42,7 @@ def main():
         "delta": 0.001,
         "min_dropout_layer": 10,
         "dropout_fraction": 0.3,
-        "lr_step_size": 7,
+        "lr_step_size": 10,
         "activation": "leaky_relu",
         "task": "regression",
     }
