@@ -1,4 +1,6 @@
 import time
+import argparse
+import yaml
 
 import torch
 import numpy as np
@@ -51,34 +53,31 @@ def timing_batches(model, gpu=False, n_repeats=5, batch_sizes=[8, 64, 256, 512])
         )
 
 
+def load_config(yaml_path):
+    with open(yaml_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config
+
+
 def main():
-    argument_dict = {
-        "onto": "../ontology.txt",
-        "train": "../labels.csv",
-        "label_col": "bc_reported",  # "has_cancer", # new for ukb
-        "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
-        "epoch": 5,
-        "lr": 0.003,
-        "wd": 0.001,
-        "alpha": 0.3,
-        "batchsize": 1480,  # 33840,
-        "modeldir": "/model_test/",
-        "cuda": 0,
-        "gene2id": "../ukb_snp_ids.csv",
-        "genotype_hiddens": 4,
-        "optimize": 1,
-        "zscore_method": "auc",
-        "std": "/model_test/std.txt",
-        "patience": 30,
-        "delta": 0.001,
-        "min_dropout_layer": 2,
-        "dropout_fraction": 0.3,
-        "lr_step_size": 120,
-        "activation": "leaky_relu",
-    }
+
+    # Load configuration from YAML file
+    parser = argparse.ArgumentParser(
+        description="Run model training with custom config."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config/config.yaml",
+        help="Path to the YAML config file.",
+    )
+    cmd_args = parser.parse_args()
+    config = load_config(cmd_args.config)
+
+    # Dynamically create dataclass from YAML config
     args = make_dataclass(
-        "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
-    )(**argument_dict)
+        "DataclassFromConfig", [(k, type(v)) for k, v in config.items()]
+    )(**config)
 
     print("Setting up data")
     snp_df = pd.read_csv(args.gene2id).reset_index()
