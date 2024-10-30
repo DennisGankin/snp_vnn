@@ -154,3 +154,47 @@ class UKBSnpLevelDatasetH5(Dataset):
         data = torch.from_numpy(data).float()
 
         return data, self.labels[idx]
+
+
+class UKBSnpLevelDatasetH5OneHot(Dataset):
+    """
+    Dataset for UKB SNP level data.
+    Using HPF5 file format.
+    """
+
+    def __init__(self, args):
+        # load labels
+        self.label_col = args.label_col
+        self.label_df = pd.read_csv(args.train)
+        self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
+
+        # load hdf5 file
+        self.hdf = h5py.File(args.mutations, "r")
+        print("loading dataset")
+        self.hdf_data = self.hdf["genotype_data"]
+
+        # get snp ids in the hdf5 file (TODO: rename)
+        self.snp_df = pd.read_csv(args.gene2id).reset_index()
+        self.snp_bed_ids = self.snp_df["snp_bed_id"]  # snp id in the hdf5 file
+        self.feature_dim = 3  # input features per snp
+
+        self.gene_id_mapping = (
+            {  # mapping row in feature matrix to the corresponding snp
+                snp: idx for idx, snp in zip(self.snp_df.index, self.snp_df["snp"])
+            }
+        )
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        data = self.hdf_data[idx, :]  # batch_size x num_snps
+        data = np.nan_to_num(data.T[self.snp_bed_ids].T)
+
+        # Convert data to torch tensor
+        data = torch.from_numpy(data).long()  # Ensure compatibility for one_hot
+
+        # One-hot encode the data (0, 1, or 2) across a new last dimension
+        data = torch.nn.functional.one_hot(data, num_classes=3).float()
+
+        return data, self.labels[idx]
