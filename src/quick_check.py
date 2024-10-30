@@ -68,7 +68,7 @@ def main():
     parser.add_argument(
         "--config",
         type=str,
-        default="config/config.yaml",
+        default="src/config/quick_check.yaml",
         help="Path to the YAML config file.",
     )
     cmd_args = parser.parse_args()

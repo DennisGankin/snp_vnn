@@ -1,24 +1,24 @@
 
-onto: "../ontology.txt",
-train: "../labels.csv",
-mutations: "../genotype_data.h5",  # "../merged_allchr.bed",
-label_col: "bc_reported",  # "has_cancer", # new for ukb
-epoch: 5,
-lr: 0.003,
-wd: 0.001,
-alpha: 0.3,
-batchsize: 1480,  # 33840,
-modeldir: "/model_test/",
-cuda: 0,
-gene2id: "../ukb_snp_ids.csv",
-genotype_hiddens: 4,
-optimize: 1,
-zscore_method: "auc",
-std: "/model_test/std.txt",
-patience: 30,
-delta: 0.001,
-min_dropout_layer: 2,
-dropout_fraction: 0.3,
-lr_step_size: 120,
-activation: "leaky_relu",
+onto: "../ontology.txt"
+train: "../labels.csv"
+mutations: "../genotype_data.h5"  # "../merged_allchr.bed"
+label_col: "bc_reported"  # "has_cancer" # new for ukb
+epoch: 5
+lr: 0.003
+wd: 0.001
+alpha: 0.3
+batchsize: 1480  # 33840
+modeldir: "/model_test/"
+cuda: 0
+gene2id: "../ukb_snp_ids.csv"
+genotype_hiddens: 4
+optimize: 1
+zscore_method: "auc"
+std: "/model_test/std.txt"
+patience: 30
+delta: 0.001
+min_dropout_layer: 2
+dropout_fraction: 0.3
+lr_step_size: 120
+activation: "leaky_relu"
 task: "classification"
