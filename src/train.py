@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import lightning as L
 
-from .datasets import UKBSnpLevelDatasetH5
+from .datasets import UKBSnpLevelDatasetH5, UKBSnpLevelDatasetH5OneHot
 from .vnn_trainer import GenoVNNLightning, FastVNNLightning, FastVNNLitReg
 from .graphs import GeneOntology
 
@@ -49,7 +49,12 @@ def main():
     )(**config)
 
     ###### load dataset
-    dataset = UKBSnpLevelDatasetH5(args)
+    if args.onehot:
+        print("Using one hot encoding")
+        dataset = UKBSnpLevelDatasetH5OneHot(args)
+    else:
+        print("Using raw data")
+        dataset = UKBSnpLevelDatasetH5(args)
     args.feature_dim = dataset.feature_dim  ### TODO
 
     ##### crate gene ontology object
