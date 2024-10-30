@@ -1,4 +1,6 @@
 import time
+import yaml
+import argparse
 
 import torch
 import numpy as np
@@ -20,35 +22,28 @@ wandb.login(key="228d1864fd44981291da247f198c331e5cde5ed4")
 from dataclasses import make_dataclass
 
 
+def load_config(yaml_path):
+    with open(yaml_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config
+
+
 def main():
-    argument_dict = {
-        "onto": "../ontology.txt",
-        "train": "../labels.csv",
-        "label_col": "height",  # "has_cancer", # new for ukb
-        "mutations": "../genotype_data.h5",  # "../merged_allchr.bed",
-        "epoch": 25,
-        "lr": 0.01,
-        "wd": 0.001,
-        "alpha": 0.3,
-        "batchsize": 256,  # 33840,
-        "modeldir": "/model_test/",
-        "cuda": 0,
-        "gene2id": "../ukb_snp_ids.csv",
-        "genotype_hiddens": 2,
-        "optimize": 1,
-        "zscore_method": "auc",
-        "std": "/model_test/std.txt",
-        "patience": 30,
-        "delta": 0.001,
-        "min_dropout_layer": 10,
-        "dropout_fraction": 0.3,
-        "lr_step_size": 10,
-        "activation": "leaky_relu",
-        "task": "regression",
-    }
+
+    # Load configuration from YAML file
+    parser = argparse.ArgumentParser(
+        description="Run model training with custom config."
+    )
+    parser.add_argument(
+        "--config", type=str, required=True, help="Path to the YAML config file."
+    )
+    cmd_args = parser.parse_args()
+    config = load_config(cmd_args.config)
+
+    # Dynamically create dataclass from YAML config
     args = make_dataclass(
-        "DataclassFromDir", ((k, type(v)) for k, v in argument_dict.items())
-    )(**argument_dict)
+        "DataclassFromConfig", [(k, type(v)) for k, v in config.items()]
+    )(**config)
 
     ###### load dataset
     dataset = UKBSnpLevelDatasetH5(args)
