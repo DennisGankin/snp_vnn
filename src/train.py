@@ -35,7 +35,10 @@ def main():
         description="Run model training with custom config."
     )
     parser.add_argument(
-        "--config", type=str, required=True, help="Path to the YAML config file."
+        "--config",
+        type=str,
+        default="config/config.yaml",
+        help="Path to the YAML config file.",
     )
     cmd_args = parser.parse_args()
     config = load_config(cmd_args.config)
