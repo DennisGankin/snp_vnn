@@ -254,12 +254,12 @@ class FastVNNLitReg(L.LightningModule):
         optimizer = optim.AdamW(
             self.model.parameters(), lr=self.args.lr
         )  # , betas=(0.9, 0.99), eps=1e-05, weight_decay=self.data_wrapper.lr)
-        # scheduler = StepLR(optimizer, step_size=self.args.lr_step_size, gamma=0.1)
+        scheduler = StepLR(optimizer, step_size=self.args.lr_step_size, gamma=0.1)
         # Define the lambda function for the learning rate schedule
         # If epoch < 3, return 1.0 (lr * 1.0 = 0.01)
         # If epoch >= 3, return 0.1 (lr * 0.1 = 0.001)
-        lambda_fn = lambda epoch: 1.0 if epoch < 3 else 0.1
-        scheduler = LambdaLR(optimizer, lr_lambda=lambda_fn)
+        # lambda_fn = lambda epoch: 1.0 if epoch < 3 else 0.1
+        # scheduler = LambdaLR(optimizer, lr_lambda=lambda_fn)
         return {
             "optimizer": optimizer,
             "lr_scheduler": scheduler,
