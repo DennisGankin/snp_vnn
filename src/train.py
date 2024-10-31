@@ -88,7 +88,7 @@ def main():
         train_dataset,
         batch_size=args.batchsize,
         shuffle=True,
-        num_workers=32,
+        num_workers=args.num_workers,  # 32,
         pin_memory=True,
         persistent_workers=True,
     )
@@ -96,7 +96,7 @@ def main():
         val_dataset,
         batch_size=args.batchsize,
         shuffle=False,
-        num_workers=16,
+        num_workers=args.num_workers / 2,
         pin_memory=True,
         persistent_workers=True,
     )
