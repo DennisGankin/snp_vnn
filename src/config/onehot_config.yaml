@@ -18,7 +18,7 @@ patience: 30
 delta: 0.001
 min_dropout_layer: 10
 dropout_fraction: 0.4
-lr_step_size: 15
+lr_step_size: 5
 activation: "leaky_relu"
 task: "regression"
 onehot: True
