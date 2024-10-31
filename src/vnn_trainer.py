@@ -258,7 +258,7 @@ class FastVNNLitReg(L.LightningModule):
         # Define the lambda function for the learning rate schedule
         # If epoch < 3, return 1.0 (lr * 1.0 = 0.01)
         # If epoch >= 3, return 0.1 (lr * 0.1 = 0.001)
-        lambda_fn = lambda epoch: 1.0 if epoch < 3 else 0.01
+        lambda_fn = lambda epoch: 1.0 if epoch < 6 else 0.02
         scheduler = LambdaLR(optimizer, lr_lambda=lambda_fn)
         return {
             "optimizer": optimizer,
