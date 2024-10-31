@@ -170,7 +170,7 @@ class UKBSnpLevelDatasetH5OneHot(Dataset):
         # add standard scaler
         self.scaler = StandardScaler()
         # scale labels
-        self.labels = self.scaler.fit_transform(self.labels.reshape(-1, 1)).reshape(-1)
+        self.labels = torch.from_numpy(self.scaler.fit_transform(self.labels.reshape(-1, 1)).reshape(-1)).float()
 
         # load hdf5 file
         self.hdf = h5py.File(args.mutations, "r")
