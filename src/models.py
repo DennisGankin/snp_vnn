@@ -65,7 +65,12 @@ class GeneModule(nn.Module):
 
 class CompleteGeneModule(nn.Module):
     def __init__(
-        self, num_genes, gene_feature_dim, gene_out_dim=1, activation=torch.tanh
+        self,
+        num_genes,
+        gene_feature_dim,
+        gene_out_dim=1,
+        activation=torch.tanh,
+        dropout=0,
     ):
         super(CompleteGeneModule, self).__init__()
         self.linear = LinearColumns(num_genes, gene_feature_dim, gene_out_dim)
@@ -73,8 +78,10 @@ class CompleteGeneModule(nn.Module):
             1
         )  # might normalizing across gene inputs be better?
         self.activation = activation
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
+        x = self.dropout(x)
         x = self.linear(x)
         x = self.activation(x)
         # permute for batchnorm
@@ -608,7 +615,9 @@ class FastVNN(nn.Module):
 
     def create_gene_layer(self):
         # create complete gene module
-        gene_layer = CompleteGeneModule(self.gene_dim, self.feature_dim)
+        gene_layer = CompleteGeneModule(
+            self.gene_dim, self.feature_dim, dropout=self.dropout_fraction
+        )
         self.add_module("gene_layer", gene_layer)
 
     # start from bottom (leaves), and start building a neural network using the given ontology
