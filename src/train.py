@@ -109,13 +109,15 @@ def main():
     # log the learning rate
     lr_monitor = LearningRateMonitor(logging_interval="step")
 
+    # build run name if config argument available
+    if "run_name" in config:
+        run_name = "nest_" + args.run_name + "_" + curr_time
+    else:
+        run_name = "nest_ukb_model_" + curr_time
+
     # Initialize WandbLogger
-    wandb_logger = WandbLogger(
-        project="vnn_ukb_breast_cancer", name="nest_height" + curr_time
-    )
-    logger = TensorBoardLogger(
-        name="nest_ukb_model_" + curr_time, save_dir="/home/dnanexus/lightning_logs"
-    )
+    wandb_logger = WandbLogger(project="vnn_ukb_breast_cancer", name=run_name)
+    logger = TensorBoardLogger(name=run_name, save_dir="/home/dnanexus/lightning_logs")
     # trainer = L.Trainer(max_epochs=args.epoch, logger=logger)
     trainer = L.Trainer(  # profiler="simple",
         max_epochs=args.epoch,  # max_steps=4,  #
