@@ -622,11 +622,14 @@ class FastVNN(nn.Module):
         )
         self.add_module("final_linear_layer_output", nn.Linear(2, 1))
 
-        # add covariate module
-        self.add_module(
-            "covariate_module",
-            CovariateModule(self.num_covariates, self.num_hiddens_genotype, dropout=0),
-        )
+        if self.num_covariates > 0:
+            # add covariate module
+            self.add_module(
+                "covariate_module",
+                CovariateModule(
+                    self.num_covariates, self.num_hiddens_genotype, dropout=0
+                ),
+            )
 
     # calculate the number of values in a state (term)
     def cal_term_dim(self, term_size_map):
@@ -725,12 +728,12 @@ class FastVNN(nn.Module):
                     ),
                 )
 
-    def forward(self, x):
+    def forward(self, input):
         aux_out_map = {}
 
         if self.num_covariates > 0:
-            x = x["x"]
-            covariates = x["covariates"]
+            x = input["x"]
+            covariates = input["covariates"]
 
         gene_input = self._modules["gene_layer"](x).squeeze(-1)
 
