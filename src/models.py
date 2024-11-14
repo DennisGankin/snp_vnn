@@ -450,6 +450,26 @@ class GenoVNN(nn.Module):
         return aux_out_map, hidden_embeddings_map
 
 
+class CovariateModule(nn.Module):
+    def __init__(self, input_size, hidden_size, out_size=2, dropout=0):
+        super(CovariateModule, self).__init__()
+
+        self.dropout = nn.Dropout(p=dropout)
+        self.linear1 = nn.Linear(input_size, hidden_size)
+        self.batchnorm = nn.BatchNorm1d(hidden_size)
+        self.linear2 = nn.Linear(hidden_size, out_size)
+
+    def forward(self, x):
+        x = self.dropout(x)
+        x = self.linear1(x)
+        x = torch.relu(x)
+        hidden = self.batchnorm(x)
+        x = self.linear2(hidden)
+        x = torch.relu(x)
+
+        return x, hidden
+
+
 class GraphLayer(nn.Module):
     def __init__(
         self,
@@ -529,6 +549,7 @@ class FastVNN(nn.Module):
 
         self.root = graph.root
         self.num_hiddens_genotype = args.genotype_hiddens
+        self.num_covariates = args.num_covariates
 
         # dictionary from terms to genes directly annotated with the term # mapping of input to genes
         self.term_direct_gene_map = graph.term_direct_gene_map
@@ -597,9 +618,15 @@ class FastVNN(nn.Module):
         # add module for final layer
         self.add_module(
             "final_aux_linear_layer",
-            nn.Linear(self.num_hiddens_genotype, 1, bias=False),
+            nn.Linear(self.num_hiddens_genotype + self.num_covariates, 2, bias=False),
         )
-        self.add_module("final_linear_layer_output", nn.Linear(1, 1))
+        self.add_module("final_linear_layer_output", nn.Linear(2, 1))
+
+        # add covariate module
+        self.add_module(
+            "covariate_module",
+            CovariateModule(self.num_covariates, self.num_hiddens_genotype, dropout=0),
+        )
 
     # calculate the number of values in a state (term)
     def cal_term_dim(self, term_size_map):
@@ -701,6 +728,10 @@ class FastVNN(nn.Module):
     def forward(self, x):
         aux_out_map = {}
 
+        if self.num_covariates > 0:
+            x = x["x"]
+            covariates = x["covariates"]
+
         gene_input = self._modules["gene_layer"](x).squeeze(-1)
 
         # loop through layers
@@ -715,12 +746,13 @@ class FastVNN(nn.Module):
                 x = y + x
 
         final_input = hidden[:, self.node_id_mapping[self.root]]
-        # aux_layer_out = torch.tanh(self._modules['final_aux_linear_layer'](final_input))
-        # aux_out_map['final'] = self._modules['final_linear_layer_output'](aux_layer_out) # this is just a 1 to one with a weight
+        if self.num_covariates > 0:
+            covariate_out, _ = self._modules["covariate_module"](covariates)
+            final_input = torch.cat((final_input, covariate_out), dim=1)
+
         # for classification
-        aux_out_map["final_logits"] = self._modules["final_aux_linear_layer"](
-            final_input
-        )
+        output = self._modules["final_aux_linear_layer"](final_input)
+        aux_out_map["final_logits"] = self._modules["final_linear_layer_output"](output)
         aux_out_map["final"] = torch.sigmoid(aux_out_map["final_logits"])
 
         return aux_out_map, x

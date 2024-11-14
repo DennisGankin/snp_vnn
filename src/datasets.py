@@ -168,9 +168,16 @@ class UKBSnpLevelDatasetH5OneHot(Dataset):
         self.label_df = pd.read_csv(args.train)
         self.labels = torch.from_numpy(self.label_df[self.label_col].values).float()
         # add standard scaler
-        self.scaler = StandardScaler()
+        # self.scaler = StandardScaler()
         # scale labels
         # self.labels = torch.from_numpy(self.scaler.fit_transform(self.labels.reshape(-1, 1)).reshape(-1)).float()
+
+        # get covariates if given in the config
+        if args.num_covariates > 0:  # hardcoded for now
+            self.covariates = self.label_df[["year_born", "genetic_sex"]]
+            self.covariates = torch.from_numpy(self.covariates.values).float()
+        else:
+            self.covariates = None
 
         # load hdf5 file
         self.hdf = h5py.File(args.mutations, "r")
@@ -200,5 +207,9 @@ class UKBSnpLevelDatasetH5OneHot(Dataset):
 
         # One-hot encode the data (0, 1, or 2) across a new last dimension
         data = torch.nn.functional.one_hot(data, num_classes=3).float()
+
+        # Add covariates if given
+        if self.covariates is not None:
+            data = {"x": data, "covariates": self.covariates[idx]}
 
         return data, self.labels[idx]
