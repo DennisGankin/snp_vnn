@@ -174,7 +174,7 @@ class UKBSnpLevelDatasetH5OneHot(Dataset):
 
         # get covariates if given in the config
         if args.num_covariates > 0:  # hardcoded for now
-            self.covariates = self.label_df[["year_born", "genetic_sex"]]
+            self.covariates = self.label_df[["year_of_birth", "genetic_sex"]]
             self.covariates = torch.from_numpy(self.covariates.values).float()
         else:
             self.covariates = None
