@@ -22,3 +22,4 @@ dropout_fraction: 0.3
 lr_step_size: 120
 activation: "leaky_relu"
 task: "classification"
+num_covariates: 0

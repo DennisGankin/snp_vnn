@@ -23,3 +23,4 @@ activation: "leaky_relu"
 task: "regression"
 onehot: True
 num_workers: 8
+num_covariates: 0

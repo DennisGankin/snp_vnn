@@ -24,3 +24,4 @@ task: "classification"
 onehot: True
 num_workers: 8
 run_name: "ami"
+num_covariates: 0
