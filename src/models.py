@@ -734,6 +734,8 @@ class FastVNN(nn.Module):
         if self.num_covariates > 0:
             x = input["x"]
             covariates = input["covariates"]
+        else:
+            x = input
 
         gene_input = self._modules["gene_layer"](x).squeeze(-1)
 
