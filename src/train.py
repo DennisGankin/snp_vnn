@@ -13,7 +13,7 @@ from .graphs import GeneOntology
 
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers import TensorBoardLogger
-from lightning.pytorch.callbacks import LearningRateMonitor
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 
 import wandb
 
@@ -118,13 +118,19 @@ def main():
     # Initialize WandbLogger
     wandb_logger = WandbLogger(project="vnn_ukb_breast_cancer", name=run_name)
     logger = TensorBoardLogger(name=run_name, save_dir="/home/dnanexus/lightning_logs")
+
+    # checkpointing callback
+    checkpoint_callback = ModelCheckpoint(
+        dirpath="/home/dnanexus/lightning_logs", save_top_k=2, monitor="val_loss_epoch"
+    )
+
     # trainer = L.Trainer(max_epochs=args.epoch, logger=logger)
     trainer = L.Trainer(  # profiler="simple",
         max_epochs=args.epoch,  # max_steps=4,  #
         logger=[logger, wandb_logger],  # val_check_interval=0.25,
         log_every_n_steps=10,
         precision=16,
-        callbacks=[lr_monitor],
+        callbacks=[lr_monitor, checkpoint_callback],
     )  # log every steps should depend on the batch size
     # trainer = L.Trainer(max_epochs=args.epoch, logger=[logger, wandb_logger], profiler="simple") # log every steps should depend on the batch size
 
