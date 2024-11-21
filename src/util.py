@@ -8,6 +8,7 @@ from sklearn.preprocessing import robust_scale
 from sklearn.preprocessing import scale
 from scipy import stats
 from sklearn.metrics import r2_score
+import yaml
 
 from PIL import Image
 
@@ -416,3 +417,9 @@ def log_scatter(module, preds, targets, val="val"):
     )
 
     plt.close(fig)
+
+
+def load_config(yaml_path):
+    with open(yaml_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config

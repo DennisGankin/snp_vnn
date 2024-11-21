@@ -1,5 +1,4 @@
 import time
-import yaml
 import argparse
 
 import torch
@@ -10,6 +9,7 @@ import lightning as L
 from .datasets import UKBSnpLevelDatasetH5, UKBSnpLevelDatasetH5OneHot
 from .vnn_trainer import GenoVNNLightning, FastVNNLightning, FastVNNLitReg
 from .graphs import GeneOntology
+from .util import load_config
 
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers import TensorBoardLogger
@@ -20,12 +20,6 @@ import wandb
 wandb.login(key="228d1864fd44981291da247f198c331e5cde5ed4")
 
 from dataclasses import make_dataclass
-
-
-def load_config(yaml_path):
-    with open(yaml_path, "r") as file:
-        config = yaml.safe_load(file)
-    return config
 
 
 def main():
