@@ -24,4 +24,4 @@ task: "classification"
 onehot: True
 num_workers: 8
 run_name: "thy"
-num_covariates: 0
+num_covariates: 2
