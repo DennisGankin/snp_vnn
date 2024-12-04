@@ -14,7 +14,9 @@ from .graphs import GeneOntology
 from dataclasses import make_dataclass
 
 
-def timing_batches(model, gpu=False, n_repeats=5, batch_sizes=[8, 64, 256, 512]):
+def timing_batches(
+    model, gpu=False, n_repeats=5, batch_sizes=[8, 64, 256, 512], feature_dim=429371
+):
     for batch_size in batch_sizes:  # 1024, 2048, 4096]:
         print(f"Trying batch size: {batch_size}")
 
@@ -22,7 +24,7 @@ def timing_batches(model, gpu=False, n_repeats=5, batch_sizes=[8, 64, 256, 512])
 
         for _ in range(n_repeats):
             # Allocate tensor and move it to the GPU
-            x = torch.randn(batch_size, 429371, 1)
+            x = torch.randn(batch_size, feature_dim, 1)
             if gpu:
                 x = x.to("cuda")
 
@@ -109,10 +111,21 @@ def main():
     torch.set_float32_matmul_precision("medium")
 
     print("Timing on CPU")
-    timing_batches(go_vnn_model, gpu=False, batch_sizes=[8, 64, 256, 512, 1024, 4096])
+    timing_batches(
+        go_vnn_model,
+        gpu=False,
+        batch_sizes=[8, 64, 256, 512],
+        feature_dim=args.input_size,
+    )
+    # timing_batches(go_vnn_model, gpu=False, batch_sizes=[8, 64, 256, 512, 1024, 4096])
 
     print("Timing on GPU")
-    timing_batches(go_vnn_model.to("cuda"), gpu=True)
+    timing_batches(
+        go_vnn_model.to("cuda"),
+        gpu=True,
+        batch_sizes=[8, 64, 256],
+        feature_dim=args.input_size,
+    )
 
 
 if __name__ == "__main__":
