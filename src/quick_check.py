@@ -114,7 +114,7 @@ def main():
     timing_batches(
         go_vnn_model,
         gpu=False,
-        batch_sizes=[8, 64, 256, 512],
+        batch_sizes=[8, 64, 256, 512, 1024],
         feature_dim=args.input_size,
     )
     # timing_batches(go_vnn_model, gpu=False, batch_sizes=[8, 64, 256, 512, 1024, 4096])
