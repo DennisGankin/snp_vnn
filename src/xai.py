@@ -27,6 +27,8 @@ from captum.attr import (
     LayerGradientXActivation,
 )
 
+from sklearn.preprocessing import MinMaxScaler
+
 # wrapper model to work with captum attributions
 class AnalyzeModel(L.LightningModule):
     def __init__(self, model):
@@ -307,6 +309,7 @@ def analyze_attribution_methods(
     k=50,
     largest=True,
     abs=True,
+    save=True
 ):
     """
     Analyzes multiple attribution matrices from different methods.
@@ -330,8 +333,8 @@ def analyze_attribution_methods(
     percentage_data_top = []
     percentage_data_bottom = []
 
-    for idx, (results, method_name) in enumerate(
-        zip(attribution_matrices, attribution_methods)
+    for idx, (results, method_name, graph) in enumerate(
+        zip(attribution_matrices, attribution_methods, graphs)
     ):
         # Compute mean attribution scores across samples (dim=0)
         if abs == False:
@@ -345,7 +348,7 @@ def analyze_attribution_methods(
         data = results[:, topk.indices.long()].detach().numpy()
 
         # Map gene indices to gene names
-        node_id_mapping = {node: i for i, node in enumerate(graphs[idx].dG.nodes())}
+        node_id_mapping = {node: i for i, node in enumerate(graph.dG.nodes())}
         node_id_df = pd.DataFrame.from_dict(
             node_id_mapping, orient="index", columns=["node_id"]
         )
@@ -463,12 +466,16 @@ def analyze_attribution_methods(
     # g.add_legend(title='GWAS Gene', loc='upper center')
     sns.move_legend(g, "upper center", bbox_to_anchor=(1, 1))
     plt.tight_layout()
-    plt.savefig("data/figs/gwas_boxplot_all"+current_date+".png")
+    if save:
+        plt.savefig("data/figs/gwas_boxplot_all"+current_date+".png")
+    else:
+        plt.show()
     plt.close()
 
     # ----------------------------------
     # Plot 2: Violin Plot for GWAS vs Non-GWAS Genes
     # ----------------------------------
+    """
     plt.figure(figsize=(12, 6))
     sns.violinplot(
         data=combined_df,
@@ -485,8 +492,12 @@ def analyze_attribution_methods(
     plt.xlabel("Method")
     plt.legend(title="GWAS Gene")
     plt.tight_layout()
-    plt.savefig("data/figs/gwas_violin_all"+current_date+".png")
+    if save:
+        plt.savefig("data/figs/gwas_violin_all"+current_date+".png")
+    else:
+        plt.show()
     plt.close()
+    """
 
     # ----------------------------------
     # Plot 3: Percentage of GWAS Genes in Top and Bottom N Genes
@@ -538,9 +549,105 @@ def analyze_attribution_methods(
         title="Method and Type", bbox_to_anchor=(1.05, 1), loc="upper left"
     )
     plt.tight_layout()
-    plt.savefig("data/figs/gwas_percentage_all"+current_date+".png")
+    if save:
+        plt.savefig("data/figs/gwas_percentage_all"+current_date+".png")
+    else:
+        plt.show()
     plt.close()
 
+    # ----------------------------------
+    # Plot 4: Jaccard index
+    # ----------------------------------
+    if len(attribution_methods) == 2:
+        # Jaccard index computation
+        method1_name = attribution_methods[0]
+        method2_name = attribution_methods[1]
+
+        # Get sorted DataFrames for the two methods
+        method1_df = combined_df[combined_df["Method"] == method1_name]
+        method2_df = combined_df[combined_df["Method"] == method2_name]
+
+        method1_sorted = method1_df.sort_values(by="Attribution Score", ascending=False)
+        method2_sorted = method2_df.sort_values(by="Attribution Score", ascending=False)
+
+        N_values = range(10, min(600, len(method1_sorted)) + 1, 10)
+        jaccard_top = []
+        jaccard_gwas = []
+        overlap_top_percentage = []
+        overlap_gwas_percentage = []
+
+        for N in N_values:
+            # Compute Jaccard index for top N genes
+            top_N_genes_method1 = set(method1_sorted.head(N)["Gene"])
+            top_N_genes_method2 = set(method2_sorted.head(N)["Gene"])
+            intersection_top = len(top_N_genes_method1.intersection(top_N_genes_method2))
+            union_top = len(top_N_genes_method1.union(top_N_genes_method2))
+            jaccard_top.append(intersection_top / union_top if union_top > 0 else 0)
+            overlap_top_percentage.append((intersection_top / N) * 100)
+
+            # Compute Jaccard index for GWAS genes among top N genes
+            top_N_gwas_method1 = set(
+                method1_sorted.head(N).query("`GWAS Gene` == True")["Gene"]
+            )
+            top_N_gwas_method2 = set(
+                method2_sorted.head(N).query("`GWAS Gene` == True")["Gene"]
+            )
+            intersection_gwas = len(top_N_gwas_method1.intersection(top_N_gwas_method2))
+            union_gwas = len(top_N_gwas_method1.union(top_N_gwas_method2))
+            jaccard_gwas.append(intersection_gwas / union_gwas if union_gwas > 0 else 0)
+            overlap_gwas_percentage.append((intersection_gwas / N) * 100)
+
+        # Create DataFrame for plotting
+        jaccard_df = pd.DataFrame(
+            {
+                "Top N Genes": list(N_values) * 2,
+                "Jaccard Index": jaccard_top + jaccard_gwas,
+                "Overlap Percentage": overlap_top_percentage + overlap_gwas_percentage,
+                "Type": ["Top Genes"] * len(N_values) + ["GWAS Genes"] * len(N_values),
+            }
+        )
+
+        # Plotting
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+
+        # Plot Jaccard Index
+        sns.lineplot(
+            data=jaccard_df,
+            x="Top N Genes",
+            y="Jaccard Index",
+            hue="Type",
+            marker="o",
+            ax=ax1,
+        )
+        ax1.set_ylabel("Jaccard Index")
+        ax1.set_xlabel("N Most Important Genes")
+        ax1.set_title(f"Jaccard Index and Overlap Percentage Between {method1_name} and {method2_name}")
+
+        # Secondary y-axis for overlap percentages
+        ax2 = ax1.twinx()
+        sns.lineplot(
+            data=jaccard_df,
+            x="Top N Genes",
+            y="Overlap Percentage",
+            hue="Type",
+            linestyle="--",
+            marker="x",
+            ax=ax2,
+            legend=False,
+        )
+        ax2.set_ylabel("Overlap Percentage (%)")
+
+        # Adjust legend
+        handles, labels = ax1.get_legend_handles_labels()
+        ax1.legend(handles=handles, labels=labels, title="Comparison Type")
+
+        plt.tight_layout()
+        if save:
+            plt.savefig("data/figs/jaccard_overlap_percentage_all" + current_date + ".png")
+        else:
+            plt.show()
+        plt.close()
+    return combined_df
 
 def analyze_models():
     sns.set_context("talk")
@@ -837,6 +944,82 @@ def analyze_systems(model_path, config_path, ontology_path, snp_path, att_dir = 
     print("Saving attributions")
     torch.save(attributions, f"{att_dir}/{model_name}_systems_baseline.pt")
 
+# Function to normalize scores within levels
+def normalize_scores(df, levels, score_column="Mean attribution", by_size = False):
+    scaler = MinMaxScaler()  # Create a MinMaxScaler instance
+    df[score_column+" normalized"] = 0.
+
+    for level in levels:
+        # Filter the dataframe for names in the current level
+        mask = df['name'].isin(level)
+        level_df = df[mask]
+        
+        # Rescale scores for the current level
+        normalized_scores = scaler.fit_transform(level_df[[score_column]])
+        if by_size:
+            normalized_scores = normalized_scores * len(level_df)
+
+        # Update the scores in the original dataframe
+        df.loc[mask, score_column+" normalized"] = normalized_scores.flatten()
+
+    return df
+
+### System analysis
+def get_system_df(model, attribution_path):
+    # model can be dictionary of paths or actual model instance
+    if type(model) == dict:
+        print("Loading config...")
+        config = load_config(model["config_path"])
+        config["feature_dim"] = 3
+        args = make_dataclass(
+            "DataclassFromConfig", [(k, type(v)) for k, v in config.items()]
+        )(**config)
+
+        gene_bim_df = pd.read_csv(model["gene_bim_path"], sep="\t")
+
+        print("SNP map and graph creation")
+        snp_id_map = {
+            snp: ind
+            for snp, ind in zip(
+                gene_bim_df["snp"].unique(), range(0, len(gene_bim_df["snp"].unique()))
+            )
+        }
+
+        graph = GeneOntology(
+            snp_id_map,
+            model["ontology_path"],
+            child_node="snp",
+        )
+
+        print("Loading model from checkpoint")
+        model = FastVNNLightning.load_from_checkpoint(
+            model["model_path"], 
+            args=args, 
+            graph=graph,
+        )
+
+    # get node id mapping and systems
+    node_id_df = pd.DataFrame.from_dict(model.model.node_id_mapping, orient="index",columns=["node_id"])
+    systems_df = node_id_df.reset_index().set_index("node_id")
+    systems_df.columns = ["name"]
+    # load system annotations 
+    annotation_df = pd.read_csv("data/nest_nodes_annotations.csv")
+    annotation_df.name = annotation_df.name.apply(lambda x: "_".join(x.split(":")))
+    annotation_df
+    # join on name and add annotation to systems df
+    systems_df["annotation"] = systems_df.merge(annotation_df, on="name", how="left").Annotation
+    # load attributions
+    sys_att = torch.load(attribution_path, weights_only=True)
+
+    systems_df["System"] = systems_df["annotation"] + " (" + systems_df["name"] + ")"
+
+    # Compute the absolute mean importance
+    systems_df['Mean importance'] = sys_att.abs().mean(dim=0).numpy()
+
+    # Normalize
+    return normalize_scores(systems_df, model.model.graph_layer_list, score_column="Mean importance")
+
+
 # main
 if __name__ == "__main__":
     #analyze_models()
@@ -858,4 +1041,3 @@ if __name__ == "__main__":
         "/cluster/project/beltrao/gankin/vnn/snp_vnn/data/NEST_UKB_OT_snp.txt",
         "/cluster/project/beltrao/gankin/vnn/geno_vnn/sample/open_targets_bim_sep_t.csv"
         )
-
