@@ -23,4 +23,4 @@ lr_step_size: 120
 activation: "leaky_relu"
 task: "classification"
 num_covariates: 0
-input_size: 706556
+input_size: 644894 #706556
