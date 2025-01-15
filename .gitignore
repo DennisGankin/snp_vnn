@@ -3,3 +3,6 @@ data/
 *.pyc
 *.pyo
 __pycache__/
+# vscode
+.vscode/
+tests/
