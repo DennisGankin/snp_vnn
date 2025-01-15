@@ -44,28 +44,27 @@ class GeneOntology:
                 gene_set.add(line[1])
         file_handle.close()
 
+        # Pre-calculate all descendants once
+        all_descendants = {node: set(nxadag.descendants(dG, node)) for node in dG.nodes()}
+        
         for term in dG.nodes():
-            term_gene_set = set()
-            if term in term_direct_gene_map:
-                term_gene_set = term_direct_gene_map[term]
-            deslist = nxadag.descendants(dG, term)
-            for child in deslist:
+            term_gene_set = set(term_direct_gene_map.get(term, set()))
+            # Use pre-calculated descendants
+            for child in all_descendants[term]:
                 if child in term_direct_gene_map:
-                    term_gene_set = term_gene_set | term_direct_gene_map[child]
-            # jisoo
-            if len(term_gene_set) == 0:
+                    term_gene_set.update(term_direct_gene_map[child])
+            
+            if not term_gene_set:
                 print("There is empty terms, please delete term:", term)
-                # dG.remove_node(term)
                 sys.exit(1)
-            else:
-                term_size_map[term] = len(term_gene_set)
-
+            term_size_map[term] = len(term_gene_set)
+        
         roots = [n for n in dG.nodes if dG.in_degree(n) == 0]
 
         uG = dG.to_undirected()
         connected_subG_list = list(nxacc.connected_components(uG))
 
-        print("There are", len(roots), "roots:", roots[0])
+        print("There are", len(roots), "roots:", roots[0:2])
         print("There are", len(dG.nodes()), "terms")
         print("There are", len(connected_subG_list), "connected components")
 
