@@ -33,6 +33,11 @@ class GeneOntology:
         file_handle = open(file_name)
         for line in file_handle:
             line = line.rstrip().split()
+            # skip empty line
+            if len(line) < 3:
+                print("Skipping incomplete line")
+                print(line)
+                continue
             if line[2] != self.child_node:
                 dG.add_edge(line[0], line[1])
             else:
